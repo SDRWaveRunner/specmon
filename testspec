@@ -1,0 +1,43 @@
+#!/usr/bin/python
+
+from __future__ import print_function
+import sys
+
+if len(sys.argv) == 1:
+    print ("Usage: " + sys.argv[0] + " <inputfile>")
+    exit(1)
+
+infile = sys.argv[1]
+
+fhandler = open (infile, "r")
+
+totaalverschil = 0
+global start_uur
+start_uur = 0
+threshold = 0
+counter = 0
+for line in fhandler:
+        #line.rstrip()
+        array = line.split(',')
+        #print ('line %s' % line + 'len: %i' % len(array) )
+        if len(array) > 5:
+            if array[0] == "A":
+                #print (len(array))
+                verschil = float(array[5]) - float(array[2])
+                totaalverschil += verschil
+                counter +=1
+            elif array[0] == "S":
+                # Startup-line
+                #global start_uur
+                start_uur = array[3]
+                threshold = array[5].rstrip()
+
+                
+
+percentage = totaalverschil / 36
+#print ('Filename: %s' % infile + '\ttotaalverschil: %.1f' % totaalverschil + '\tpercentage: %.2f' % percentage )
+#print ('U %s V %.1f P %.2f T %s' % ( start_uur, totaalverschil, percentage, threshold ) )
+print ('U %s V %.1f P %.2f T %s O %i' % ( start_uur, totaalverschil, percentage, threshold, counter ) )
+#print ('Filename: %s' % infile + '\tpercentage: %2.2f' % percentage + '\ttotaalverschil: %.1f' % totaalverschil )
+
+            

@@ -1,0 +1,11 @@
+#!/bin/bash
+BESTAND=$1
+gnuplot <<- EOF
+set terminal png size 1024,768
+set output '$BESTAND.png'
+set style fill solid 0.5
+set style data boxes
+set yrange [0:40]
+#plot "$BESTAND" using 1:2 with lines
+plot "$BESTAND" using 2:6
+EOF
