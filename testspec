@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from __future__ import print_function
+from datetime import datetime
 import sys
 
 if len(sys.argv) == 1:
@@ -16,6 +17,7 @@ global start_uur
 start_uur = 0
 threshold = 0
 counter = 0
+dom = 0
 for line in fhandler:
         #line.rstrip()
         array = line.split(',')
@@ -31,13 +33,15 @@ for line in fhandler:
                 #global start_uur
                 start_uur = array[3]
                 threshold = array[5].rstrip()
-
+                date_time = datetime.fromtimestamp(float(array[1]))
+                dom = date_time.strftime("%d")
                 
 
 percentage = totaalverschil / 36
+average_open = totaalverschil / counter
 #print ('Filename: %s' % infile + '\ttotaalverschil: %.1f' % totaalverschil + '\tpercentage: %.2f' % percentage )
 #print ('U %s V %.1f P %.2f T %s' % ( start_uur, totaalverschil, percentage, threshold ) )
-print ('U %s V %.1f P %.2f T %s O %i' % ( start_uur, totaalverschil, percentage, threshold, counter ) )
+print ('U %s V %.1f P %.2f T %s O %i D %s A %.1f' % ( start_uur, totaalverschil, percentage, threshold, counter, dom, average_open ) )
 #print ('Filename: %s' % infile + '\tpercentage: %2.2f' % percentage + '\ttotaalverschil: %.1f' % totaalverschil )
 
             

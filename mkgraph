@@ -14,4 +14,10 @@ set style fill solid 0.5
 set style data boxes
 unset yrange
 plot "$BESTAND" using 2:10
+
+set output '$BESTAND-avgopen.png'
+set style fill solid 0.5
+set style data boxes
+unset yrange
+plot "$BESTAND" using 2:14
 EOF
