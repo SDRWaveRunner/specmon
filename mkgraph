@@ -6,18 +6,24 @@ set output '$BESTAND-percent.png'
 set style fill solid 0.5
 set style data boxes
 set yrange [0:40]
+set xlabel "Hours"
+set ylabel "Percent"
 #plot "$BESTAND" using 1:2 with lines
-plot "$BESTAND" using 2:6
+plot "$BESTAND" using 2:6 linecolor rgb '#0072bd'
 
 set output '$BESTAND-opening.png'
 set style fill solid 0.5
 set style data boxes
 unset yrange
-plot "$BESTAND" using 2:10
+set xlabel "Hours"
+set ylabel "Number of openings"
+plot "$BESTAND" using 2:10 linecolor rgb '#4dbeee'
 
 set output '$BESTAND-avgopen.png'
 set style fill solid 0.5
 set style data boxes
 unset yrange
-plot "$BESTAND" using 2:14
+set xlabel "Hours"
+set ylabel "Avg open time"
+plot "$BESTAND" using 2:14 linecolor rgb '#77ac30'
 EOF
