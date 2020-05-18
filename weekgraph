@@ -1,0 +1,13 @@
+#!/bin/bash
+INPUT=$1
+gnuplot <<- EOF
+set terminal png size 1280,768
+set output '$INPUT-week.png'
+set xrange [0:23]
+set xlabel "Hour"
+set ylabel "Day"
+set cblabel "Percentage of usage"
+unset key
+load 'gnuplot-palettes/reds.pal'
+plot "$INPUT" using 2:12:6 with image pixels
+EOF

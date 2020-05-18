@@ -14,12 +14,14 @@ When running headless on a Raspberry Pi, a Raspberry Pi 3 or better is required.
 This dependencies allows you to use [RTL-SDR] , [HackRF], and [BladeRF]. If you need support for your specific SDR, you need to install the dependencies too.<br> If you need support for [PlutoSDR], you need to install the next dependencies:
 `apt install libiio0 libad9361-0 gr-iio`
 
+The default palette for the graphs can be changed by loading an additional palette from [gnuplot-palettes]. The weekgraphs are made with 'reds.pal'
+
 ## Running the software
 
 Running the software is quite easy but requires some preparations:
 
 1. Choose the frequency to be monitored
-2. Determine the required bandwidth and sample-rate
+2. Determine the required bandwidth, sample-rate and decimation
 	- This defines the centre-frequency, or frequency to tune the SDR to.
 3. Determine the threshold
 
@@ -27,9 +29,9 @@ Running the software is quite easy but requires some preparations:
 
 We want to monitor the European PMR (Public Mobile Radio) band [[4]]. The defined frequency-range is 446.0 - 446.2 MHz so 200KHz bandwith.
 The centre-frequency is 446.1MHz. You need to tune the SDR to this frequency.
-The required sample-rate should be 200.000 samples per second (200ksps). Unfortunatly the RTL-SDR does not support this exact range so you need to pick something as close as possible. Choose 240ksps.
+The required sample-rate should be 200.000 samples per second (200ksps). With the decimation-option this samplerate is created: Sample-rate 2Msps and a decimation 10 results in exactly 200.000 samples per second.
 
-I advice you to first run the GUI version to visual inspect the selected spectrum and to determine the threshold. From within Gnuradio-Companion, run specmon.grc, select the frequency (446.1e6), sample-rate (240e3), and run the flowchart.
+I advice you to first run the GUI version to visual inspect the selected spectrum and to determine the threshold. From within Gnuradio-Companion, run specmon.grc, select the frequency (446.1e6), sample-rate (2e6), decimation (10) and run the flowchart.
 
 All depending on your SDR, gain, antenna and environment you can see the threshold drop when the frequency-band is idle. Take note of this value and increase it a little bit. For example, if it's idling around 0.75, increase to about 0.9 to prevent false-positives but prevent missing-out some band-usage. 
 
@@ -42,7 +44,7 @@ Specmon is designed to run one hour and restart for a new logfile. The previous 
 
 On your headless system run the software:
 
-`./specmon-cli.py -f 446.1e6 -s 240e3 -g 30 -G 0.8`
+`./specmon-cli.py -f 446.1e6 -s 2e6 -D 10 -g 30 -T 0.8`
 And you should see lines like this:
 
 `A,1.1,1576821964,U,0.8,1576821964`
@@ -68,34 +70,41 @@ for i in `ls log/specmon2-200110*csv`; do ./testspec $i >> log/200110.log ; done
 And now plot the graph:
 `./mkgraph 200110.log`
 
-View the graph in your viewer. After the first week you can see patterns of usage over the week. After several weeks you start seeing patterns per day.
+View the graph in your viewer. After the first week you can see patterns of usage over the week. After several weeks you start seeing patterns per day. First combine a week of data:
+`cat day1.log day2.log day3.log day4.log day5.log day6.log day7.log >> week.log`
+and plot a 3D graph for the week:
+`./weekgraph week.log`
 
 ---
 ## Some suggestions for use
 ### Frequency suggenstions
-EU 70cm analog repeaters: 
+**EU 70cm analog repeaters:** 
 
 - Downlink: 430.000 - 430.400 MHz
 - Center-frequency: 430.200 MHz
-- Sample-rate: 400e3
+- Sample-rate: 2e6
+- Decimation: 5
 
-EU 70cm DMR repeater:
+**EU 70cm DMR repeater:**
 
 - Downlink: 438.000 - 438.400 MHz
 - Center-frequency: 438.200 MHz
-- Sample-rate: 400e3
+- Sample-rate: 2e6
+- Decimation: 5
 
-EU 2M analog repeaters:
+**EU 2M analog repeaters:**
 
 - Downlink: 145.600 - 145.800 MHz
 - Center-frequency: 145.700 MHz
-- Sample-rate: 200e3 (240e3 for [RTL-SDR])
+- Sample-rate: 2e6
+- Decimation: 10
 
-EU PMR446 [[4]]:
+**EU PMR446 [[4]]:**
 
 - Frequency span: 446.000 - 446.200 MHz
 - Center-frequency: 446.100 MHz
-- Sample-rate: 200e3 (240e3 for [RTL-SDR])
+- Sample-rate: 2e6
+- Decimation: 10
 
 ### Verbose mode
 Determining the threshold can also be achieved in headless mode. Run specmon_cli.py with the `-v 1` option.
@@ -134,9 +143,8 @@ Options:
                         Set Threshold [default=60.0]
   -v VERBOSE, --verbose=VERBOSE
                         Set Verbose [default=0]
-
 ````
-Be aware that sample-rate and frequency must be in scientific notation. For example: `-s 240e3 -f 446.1e6`.
+Be aware that sample-rate and frequency must be in scientific notation. For example: `-s 2e6 -D 10 -f 446.1e6`.
 
 [RTL-SDR]: https://www.rtl-sdr.com/buy-rtl-sdr-dvb-t-dongles/
 [HackRF]: https://greatscottgadgets.com/hackrf/
@@ -144,3 +152,4 @@ Be aware that sample-rate and frequency must be in scientific notation. For exam
 [BladeRF]: https://www.nuand.com/
 [4]: https://en.wikipedia.org/wiki/PMR446
 [5]: https://www.gnuradio.org/
+[gnuplot-palettes]: https://github.com/Gnuplotting/gnuplot-palettes
