@@ -458,7 +458,7 @@
     </param>
     <param>
       <key>value</key>
-      <value>rtl=00000201</value>
+      <value>rtl=0</value>
     </param>
   </block>
   <block>
@@ -1931,7 +1931,7 @@
     </param>
     <param>
       <key>decim</key>
-      <value>10</value>
+      <value>decimation</value>
     </param>
     <param>
       <key>_enabled</key>
