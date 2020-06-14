@@ -1,4 +1,4 @@
 #!/bin/bash
 # Add line-buffered output to prevent loss of measurements on exit 
 #
-stdbuf -oL timeout 3590s /home/pi/bin/specmon_cli.py -G 0.9 -g 36 -f 446.1e6 -s 250e3 > /tmp/specmon2-`date +%y%m%d-%H%M`.csv 2>> /tmp/specmon.debug
+stdbuf -oL /home/pi/bin/specmon_cli.py -G 0.9 -g 36 -f 446.1e6 -s 250e3 > /tmp/specmon2-`date +%y%m%d-%H%M`.csv 2>> /tmp/specmon.debug

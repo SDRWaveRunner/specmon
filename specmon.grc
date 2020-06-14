@@ -176,7 +176,7 @@
     </param>
     <param>
       <key>value</key>
-      <value>10</value>
+      <value>20</value>
     </param>
   </block>
   <block>
@@ -187,7 +187,7 @@
     </param>
     <param>
       <key>value</key>
-      <value>446.1e6</value>
+      <value>143e6</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -559,7 +559,7 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>True</value>
+      <value>2</value>
     </param>
     <param>
       <key>_coordinate</key>
@@ -618,7 +618,7 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>True</value>
+      <value>2</value>
     </param>
     <param>
       <key>_coordinate</key>
@@ -696,7 +696,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.start_state = start_state
         self.verbose = verbose
         #print ("Start time: ", int(time.time()))
-        print ("S,%i,H,%s,T,%.2f" % ( int(time.time()), str(time.strftime("%H")), threshold_value ) )
+        print ("S,%.2f,H,%s,T,%.2f" % ( time.time(), str(time.strftime("%H")), threshold_value ) )
 
     def work(self, input_items, output_items):
         """example: multiply with constant"""
@@ -704,15 +704,15 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         if self.verbose &gt; 0:
             print ("Current value: ", testing )
         if testing &gt; self.threshold_value and self.start_state == 0:
-            open_time = int(time.time())
+            open_time = time.time()
             self.start_state = 1
             #print("Above threshold: %.1f at %i" % (testing, open_time), end='' )
-            print("A,%.2f,%i," % (testing, open_time), end='' )
+            print("A,%.2f,%.2f," % (testing, open_time), end='' )
         elif testing &lt; self.threshold_value and self.start_state == 1:
             self.start_state = 0
-            close_time = int(time.time())
+            close_time = time.time()
             #print(" Under threshold: %.1f at %i" % (testing, close_time))
-            print("U,%.2f,%i" % (testing, close_time))
+            print("U,%.2f,%.2f" % (testing, close_time))
         #output_items[0][:] = input_items[0] * self.example_param
         return len(input_items[0])
 </value>
@@ -2050,7 +2050,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_enabled</key>
-      <value>True</value>
+      <value>0</value>
     </param>
     <param>
       <key>_coordinate</key>
@@ -2155,6 +2155,93 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     <param>
       <key>sync</key>
       <value></value>
+    </param>
+  </block>
+  <block>
+    <key>pluto_source</key>
+    <param>
+      <key>bbdc</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>buffer_size</key>
+      <value>0x8000</value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>uri</key>
+      <value>192.168.2.1</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>auto_filter</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>filter</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(16, 444)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>gain</key>
+      <value>"manual"</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>pluto_source_0</value>
+    </param>
+    <param>
+      <key>frequency</key>
+      <value>int(freq)</value>
+    </param>
+    <param>
+      <key>manual_gain</key>
+      <value>rfgain</value>
+    </param>
+    <param>
+      <key>maxoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>minoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>quadrature</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>rfdc</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>bandwidth</key>
+      <value>20000000</value>
+    </param>
+    <param>
+      <key>samplerate</key>
+      <value>int(samp_rate)</value>
     </param>
   </block>
   <block>
@@ -2708,6 +2795,12 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
   </connection>
   <connection>
     <source_block_id>osmosdr_source_0</source_block_id>
+    <sink_block_id>rational_resampler_xxx_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>pluto_source_0</source_block_id>
     <sink_block_id>rational_resampler_xxx_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>

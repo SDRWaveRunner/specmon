@@ -38,7 +38,12 @@ for line in fhandler:
                 
 
 percentage = totaalverschil / 36
-average_open = totaalverschil / counter
+
+if counter == 0:
+        average_open = 0
+else:
+        average_open = totaalverschil / counter
+
 #print ('Filename: %s' % infile + '\ttotaalverschil: %.1f' % totaalverschil + '\tpercentage: %.2f' % percentage )
 #print ('U %s V %.1f P %.2f T %s' % ( start_uur, totaalverschil, percentage, threshold ) )
 print ('U %s V %.1f P %.2f T %s O %i D %s A %.1f' % ( start_uur, totaalverschil, percentage, threshold, counter, dom, average_open ) )

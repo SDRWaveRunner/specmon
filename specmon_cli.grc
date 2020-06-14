@@ -183,7 +183,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(688, 232)</value>
+      <value>(856, 232)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -200,6 +200,57 @@
     <param>
       <key>minoutbuf</key>
       <value>0</value>
+    </param>
+    <param>
+      <key>vlen</key>
+      <value>1</value>
+    </param>
+  </block>
+  <block>
+    <key>blocks_head</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(272, 228)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>blocks_head_0</value>
+    </param>
+    <param>
+      <key>maxoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>minoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>num_items</key>
+      <value>int(samp_rate*runtime)</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>complex</value>
     </param>
     <param>
       <key>vlen</key>
@@ -230,11 +281,11 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(896, 232)</value>
+      <value>(880, 380)</value>
     </param>
     <param>
       <key>_rotation</key>
-      <value>0</value>
+      <value>180</value>
     </param>
     <param>
       <key>id</key>
@@ -277,7 +328,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(880, 352)</value>
+      <value>(640, 364)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -332,11 +383,11 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>True</value>
+      <value>1</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(504, 224)</value>
+      <value>(664, 220)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -383,7 +434,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(280, 384)</value>
+      <value>(288, 380)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -458,7 +509,7 @@
     </param>
     <param>
       <key>value</key>
-      <value>rtl=0</value>
+      <value>rtl=00000201</value>
     </param>
   </block>
   <block>
@@ -1943,7 +1994,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(296, 208)</value>
+      <value>(448, 204)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2019,6 +2070,53 @@
     <param>
       <key>value</key>
       <value>30</value>
+    </param>
+  </block>
+  <block>
+    <key>parameter</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(120, 380)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>runtime</value>
+    </param>
+    <param>
+      <key>label</key>
+      <value>Runtime in seconds</value>
+    </param>
+    <param>
+      <key>short_id</key>
+      <value>R</value>
+    </param>
+    <param>
+      <key>hide</key>
+      <value>none</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>intx</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>3590</value>
     </param>
   </block>
   <block>
@@ -2111,7 +2209,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.start_state = start_state
         self.verbose = verbose
         # print ("Start time: ", int(time.time()))
-        print ("S,%i,H,%s,T,%.2f" % ( int(time.time()), str(time.strftime("%H")), threshold_value ) )
+        print ("S,%.2f,H,%s,T,%.2f" % ( time.time(), str(time.strftime("%H")), threshold_value ) )
 
     def work(self, input_items, output_items):
         # Determine length of input
@@ -2126,15 +2224,15 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         if self.verbose &gt; 0:
             print ("Current value: ", testing )
         if testing &gt; self.threshold_value and self.start_state == 0:
-            open_time = int(time.time())
+            open_time = time.time()
             self.start_state = 1
             #print("Above threshold: %.1f at %i" % (testing, open_time), end='' )
-            print("A,%.2f,%i," % (testing, open_time), end='' )
+            print("A,%.2f,%.2f," % (testing, open_time), end='' )
         elif testing &lt; self.threshold_value and self.start_state == 1:
             self.start_state = 0
-            close_time = int(time.time())
+            close_time = time.time()
             #print(" Under threshold: %.1f at %i" % (testing, close_time))
-            print("U,%.2f,%i" % (testing, close_time))
+            print("U,%.2f,%.2f" % (testing, close_time))
         #output_items[0][:] = input_items[0] * self.example_param
         return bla
 </value>
@@ -2149,7 +2247,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(600, 352)</value>
+      <value>(424, 364)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2273,6 +2371,12 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     <sink_key>0</sink_key>
   </connection>
   <connection>
+    <source_block_id>blocks_head_0</source_block_id>
+    <sink_block_id>rational_resampler_xxx_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
     <source_block_id>blocks_integrate_xx_0</source_block_id>
     <sink_block_id>blocks_moving_average_xx_0</sink_block_id>
     <source_key>0</source_key>
@@ -2292,7 +2396,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
   </connection>
   <connection>
     <source_block_id>osmosdr_source_0</source_block_id>
-    <sink_block_id>rational_resampler_xxx_0</sink_block_id>
+    <sink_block_id>blocks_head_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
