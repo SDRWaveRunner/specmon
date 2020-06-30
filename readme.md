@@ -24,6 +24,9 @@ Running the software is quite easy but requires some preparations:
 2. Determine the required bandwidth, sample-rate and decimation
 	- This defines the centre-frequency, or frequency to tune the SDR to.
 3. Determine the threshold
+4. Select the time to run. Default is 3590 seconds.
+
+The default runtime is 10 seconds less than one hour. This is to prevent the software is starting up again while just finishing the last measurement. 
 
 ### Example 
 
@@ -47,9 +50,14 @@ On your headless system run the software:
 `./specmon-cli.py -f 446.1e6 -s 2e6 -D 10 -g 30 -T 0.8`
 And you should see lines like this:
 
-`A,1.1,1576821964,U,0.8,1576821964`
+`A,1.1,1576821964.22,U,0.8,1576821964.78`
 
-A is *Above*, U is *Under* the threshold. Time is a Unix timestamp and the value between is the value rising and falling the threshold.
+- A is *Above*,
+- 1.1 is the average low-value since the last measurement,
+- 1576821964.22 is the timestamp,
+- U is *Under* the threshold,
+- 2.8 is the maximum value reached during this trigger,
+- 1576821964.78 is the timestamp when dropped below the threshold. 
 
 
 If you are happy with the result, start running it from cron and let it run for several days:
@@ -143,8 +151,16 @@ Options:
                         Set Threshold [default=60.0]
   -v VERBOSE, --verbose=VERBOSE
                         Set Verbose [default=0]
+  -R RUNTIME, --runtime=RUNTIME
+  						Set Runtime in seconds [default=3590]
 ````
 Be aware that sample-rate and frequency must be in scientific notation. For example: `-s 2e6 -D 10 -f 446.1e6`.
+
+## Revisions
+June 2020:
+Software is capable of measuring shorter bursts. 
+Reporting now has an average of the "low values", i.e. under the threshold, since the last trigger of the threshold.
+Reporting the max value measured during the trigger of the threshold.
 
 [RTL-SDR]: https://www.rtl-sdr.com/buy-rtl-sdr-dvb-t-dongles/
 [HackRF]: https://greatscottgadgets.com/hackrf/

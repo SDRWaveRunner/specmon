@@ -6,7 +6,7 @@
     <key>options</key>
     <param>
       <key>author</key>
-      <value>SDRWaveRunner</value>
+      <value>PE1RIK</value>
     </param>
     <param>
       <key>window_size</key>
@@ -2208,6 +2208,10 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.threshold_value = threshold_value
         self.start_state = start_state
         self.verbose = verbose
+        self.maxval = self.threshold_value
+        self.sumval = 0
+        self.lowcounter = 1
+
         # print ("Start time: ", int(time.time()))
         print ("S,%.2f,H,%s,T,%.2f" % ( time.time(), str(time.strftime("%H")), threshold_value ) )
 
@@ -2221,18 +2225,32 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         else:
             testing = float(input_items[0][:])
             #print("len,%i " % bla)
+        if testing &gt; self.maxval:
+            self.maxval = testing
+
         if self.verbose &gt; 0:
-            print ("Current value: ", testing )
+            #print ("Current value: ", testing, " M ", self.maxval, " N ", self.lowcounter, " S ", self.sumval )
+            print ("Current value: %.5f M %1.2f N %i S %.3f" % ( testing, self.maxval, self.lowcounter, self.sumval ) )
         if testing &gt; self.threshold_value and self.start_state == 0:
             open_time = time.time()
             self.start_state = 1
+            lowavg = self.sumval / self.lowcounter
             #print("Above threshold: %.1f at %i" % (testing, open_time), end='' )
-            print("A,%.2f,%.2f," % (testing, open_time), end='' )
+            #print("A,%.2f,%.2f," % (testing, open_time), end='' )
+            print("A,%.2f,%.2f," % (lowavg, open_time), end='' )
         elif testing &lt; self.threshold_value and self.start_state == 1:
             self.start_state = 0
             close_time = time.time()
             #print(" Under threshold: %.1f at %i" % (testing, close_time))
-            print("U,%.2f,%.2f" % (testing, close_time))
+            print("U,%.2f,%.2f" % (self.maxval, close_time))
+            self.maxval = self.threshold_value
+            self.sumval = 0
+            self.lowcounter = 1
+        else:
+        #elif testing &lt; self.threshold_value and self.start_state == 0:
+            self.sumval += testing
+            self.lowcounter += 1
+
         #output_items[0][:] = input_items[0] * self.example_param
         return bla
 </value>
