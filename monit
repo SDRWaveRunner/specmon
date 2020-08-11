@@ -1,4 +1,10 @@
 #!/bin/bash
-# Add line-buffered output to prevent loss of measurements on exit 
-#
-stdbuf -oL /home/pi/bin/specmon_cli.py -G 0.9 -g 36 -f 446.1e6 -s 250e3 > /tmp/specmon2-`date +%y%m%d-%H%M`.csv 2>> /tmp/specmon.debug
+
+# Specmon with head-block. quits after a defined period of time. (-R)
+stdbuf -oL /home/pi/grc/specmon2/specmon_cli.py -G 0.9 -g 36 -f 446.1e6 -s 2e6 -D 10 -R 3590 > /tmp/specmon2-`date +%y%m%d-%H%M`.csv 2>> /tmp/specmon.debug
+
+# The next lines are for temperature and runtime debugging, mainly on a Raspberry Pi
+# TEMPLOG=/tmp/specmon2-`date +%y%m%d`.templog
+# date >> $TEMPLOG
+# Next line only for Raspberry Pi
+# /opt/vc/bin/vcgencmd measure_temp >> $TEMPLOG

@@ -46,7 +46,7 @@ else:
 
 #print ('Filename: %s' % infile + '\ttotaalverschil: %.1f' % totaalverschil + '\tpercentage: %.2f' % percentage )
 #print ('U %s V %.1f P %.2f T %s' % ( start_uur, totaalverschil, percentage, threshold ) )
-print ('U %s V %.1f P %.2f T %s O %i D %s A %.1f' % ( start_uur, totaalverschil, percentage, threshold, counter, dom, average_open ) )
+print ('U %s V %.2f P %.2f T %s O %i D %s A %.2f' % ( start_uur, totaalverschil, percentage, threshold, counter, dom, average_open ) )
 #print ('Filename: %s' % infile + '\tpercentage: %2.2f' % percentage + '\ttotaalverschil: %.1f' % totaalverschil )
 
             

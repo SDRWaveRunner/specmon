@@ -101,7 +101,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(16, 416)</value>
+      <value>(344, 292)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -324,7 +324,7 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>1</value>
+      <value>2</value>
     </param>
     <param>
       <key>_coordinate</key>
@@ -383,7 +383,7 @@
     </param>
     <param>
       <key>_enabled</key>
-      <value>1</value>
+      <value>2</value>
     </param>
     <param>
       <key>_coordinate</key>
@@ -399,7 +399,7 @@
     </param>
     <param>
       <key>length</key>
-      <value>1024</value>
+      <value>128</value>
     </param>
     <param>
       <key>long_form</key>
@@ -434,7 +434,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(288, 380)</value>
+      <value>(1112, 20)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -509,7 +509,7 @@
     </param>
     <param>
       <key>value</key>
-      <value>rtl=00000201</value>
+      <value>rtl=0</value>
     </param>
   </block>
   <block>
@@ -1967,6 +1967,93 @@
     </param>
   </block>
   <block>
+    <key>pluto_source</key>
+    <param>
+      <key>bbdc</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>buffer_size</key>
+      <value>0x8000</value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>uri</key>
+      <value>192.168.2.1</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>auto_filter</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>filter</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(24, 372)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>gain</key>
+      <value>"manual"</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>pluto_source_0</value>
+    </param>
+    <param>
+      <key>frequency</key>
+      <value>int(freq)</value>
+    </param>
+    <param>
+      <key>manual_gain</key>
+      <value>rfgain</value>
+    </param>
+    <param>
+      <key>maxoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>minoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>quadrature</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>rfdc</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>bandwidth</key>
+      <value>20000000</value>
+    </param>
+    <param>
+      <key>samplerate</key>
+      <value>int(samp_rate)</value>
+    </param>
+  </block>
+  <block>
     <key>rational_resampler_xxx</key>
     <param>
       <key>alias</key>
@@ -2088,7 +2175,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(120, 380)</value>
+      <value>(1072, 164)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2414,6 +2501,12 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
   </connection>
   <connection>
     <source_block_id>osmosdr_source_0</source_block_id>
+    <sink_block_id>blocks_head_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>pluto_source_0</source_block_id>
     <sink_block_id>blocks_head_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>

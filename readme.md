@@ -31,7 +31,7 @@ The default runtime is 10 seconds less than one hour. This is to prevent the sof
 ### Example 
 
 We want to monitor the European PMR (Public Mobile Radio) band [[4]]. The defined frequency-range is 446.0 - 446.2 MHz so 200KHz bandwith.
-The centre-frequency is 446.1MHz. You need to tune the SDR to this frequency.
+The center-frequency is 446.1MHz. You need to tune the SDR to this frequency.
 The required sample-rate should be 200.000 samples per second (200ksps). With the decimation-option this samplerate is created: Sample-rate 2Msps and a decimation 10 results in exactly 200.000 samples per second.
 
 I advice you to first run the GUI version to visual inspect the selected spectrum and to determine the threshold. From within Gnuradio-Companion, run specmon.grc, select the frequency (446.1e6), sample-rate (2e6), decimation (10) and run the flowchart.
@@ -50,7 +50,7 @@ On your headless system run the software:
 `./specmon-cli.py -f 446.1e6 -s 2e6 -D 10 -g 30 -T 0.8`
 And you should see lines like this:
 
-`A,1.1,1576821964.22,U,0.8,1576821964.78`
+`A,1.1,1576821964.22,U,2.8,1576821964.78`
 
 - A is *Above*,
 - 1.1 is the average low-value since the last measurement,
@@ -68,6 +68,7 @@ crontab -l
 0 * * * *      /home/pi/bin/monit
 ````
 The script monit is provided in the source-tree. This runs the tool for an hour and creates a logfile per hour.
+Additionaly it creates a logfile with end-time of the script and (for a Raspberry Pi) the temperature. This option is default disabled.
 
 ### Postprocessing the data
 After running for 24 hours you can make a graph for the usage-statistics. Therefor you need to postprocess the data using "testspec":
@@ -75,17 +76,24 @@ After running for 24 hours you can make a graph for the usage-statistics. Theref
 ````
 for i in `ls log/specmon2-200110*csv`; do ./testspec $i >> log/200110.log ; done
 ````
-And now plot the graph:
+And now plot the graphs:
 `./mkgraph 200110.log`
+This results in 3 graphs:
 
-View the graph in your viewer. After the first week you can see patterns of usage over the week. After several weeks you start seeing patterns per day. First combine a week of data:
++ 200110.log-opening.png with the number of openings
++ 200110.log-percent.png with the percentage of time "open" or "used"
++ 200110.log-avgopen.png with the average time "open"
+
+View the graphs in your viewer. 
+After the first week you can see patterns of usage over the week. After several weeks you start seeing patterns per day. First combine a week of data:
 `cat day1.log day2.log day3.log day4.log day5.log day6.log day7.log >> week.log`
 and plot a 3D graph for the week:
 `./weekgraph week.log`
+This creates a 3D plot over the entire week.
 
 ---
 ## Some suggestions for use
-### Frequency suggenstions
+### Frequency suggestions
 **EU 70cm analog repeaters:** 
 
 - Downlink: 430.000 - 430.400 MHz
@@ -113,6 +121,16 @@ and plot a 3D graph for the week:
 - Center-frequency: 446.100 MHz
 - Sample-rate: 2e6
 - Decimation: 10
+
+Since the revision of june 2020 small bursts can trigger specmon and measured. AIS bursts are very short but can be measured. Settings are:
+
+**AIS bursts:**
+
+- Frequency span: 161.950 - 162.050 MHz
+- Center-frequency: 162.000 MHz
+- Sample-rate: 2e6
+- Decimation: 20
+
 
 ### Verbose mode
 Determining the threshold can also be achieved in headless mode. Run specmon_cli.py with the `-v 1` option.
@@ -157,6 +175,9 @@ Options:
 Be aware that sample-rate and frequency must be in scientific notation. For example: `-s 2e6 -D 10 -f 446.1e6`.
 
 ## Revisions
+August 2020:
+Some minor updates on documentation and the script for running specmon from cron. Printing 2 decimals to increase resolution in testspec.
+
 June 2020:
 Software is capable of measuring shorter bursts. 
 Reporting now has an average of the "low values", i.e. under the threshold, since the last trigger of the threshold.
