@@ -1,0 +1,19 @@
+#!/bin/bash
+
+LOGDIR=/home/pi/log
+DATESTRING=`date --date=yesterday +%y%m%d`
+OUTSTRING=`date +%y%m%d`
+LOGPREFIX=specmon2
+ENABLED=1
+
+if [ $ENABLED == 1 ]; then
+    for i in `ls $LOGDIR/$LOGPREFIX-$DATESTRING*csv`; do
+        
+        /home/pi/specmon/testspec -i $i -o $LOGDIR/$OUTSTRING.plot;
+    done
+    
+    /home/pi/specmon/mkgraph $LOGDIR/$OUTSTRING.plot
+
+fi
+
+

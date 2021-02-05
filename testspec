@@ -1,16 +1,22 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
-from __future__ import print_function
 from datetime import datetime
-import sys
+import argparse
+#import sys
 
-if len(sys.argv) == 1:
-    print ("Usage: " + sys.argv[0] + " <inputfile>")
-    exit(1)
+parser = argparse.ArgumentParser()
+parser.add_argument('-i', '--infile', type=str, help='Filename with vectors', required=True)
+parser.add_argument('-o', '--outfile', type=str, help='Filename where to put output', required=True)
+args = parser.parse_args()
 
-infile = sys.argv[1]
+#if len(sys.argv) == 1:
+#    print ("Usage: " + sys.argv[0] + " <inputfile>")
+#    exit(1)
 
-fhandler = open (infile, "r")
+#infile = sys.argv[1]
+
+fhandler = open (args.infile, "r")
+outhandler = open (args.outfile, "a")
 
 totaalverschil = 0
 global start_uur
@@ -18,6 +24,7 @@ start_uur = 0
 threshold = 0
 counter = 0
 dom = 0
+maxval = 0
 for line in fhandler:
         #line.rstrip()
         array = line.split(',')
@@ -28,6 +35,9 @@ for line in fhandler:
                 verschil = float(array[5]) - float(array[2])
                 totaalverschil += verschil
                 counter +=1
+                # Determine the max of measurement over the hour
+                if float(array[4]) > maxval:
+                        maxval = float(array[4])
             elif array[0] == "S":
                 # Startup-line
                 #global start_uur
@@ -46,7 +56,7 @@ else:
 
 #print ('Filename: %s' % infile + '\ttotaalverschil: %.1f' % totaalverschil + '\tpercentage: %.2f' % percentage )
 #print ('U %s V %.1f P %.2f T %s' % ( start_uur, totaalverschil, percentage, threshold ) )
-print ('U %s V %.2f P %.2f T %s O %i D %s A %.2f' % ( start_uur, totaalverschil, percentage, threshold, counter, dom, average_open ) )
+print ('U %s V %.2f P %.2f T %s O %i D %s A %.2f M %.2f' % ( start_uur, totaalverschil, percentage, threshold, counter, dom, average_open, maxval ), file=outhandler )
 #print ('Filename: %s' % infile + '\tpercentage: %2.2f' % percentage + '\ttotaalverschil: %.1f' % totaalverschil )
 
             

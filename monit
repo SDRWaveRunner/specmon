@@ -1,7 +1,24 @@
 #!/bin/bash
 
+THRESHOLD=0.13
+GAIN=30
+FREQ=446.1e6
+RUNTIME=3590
+DECIM=10
+SAMPRATE=2e6
+
+LOGDIR=/tmp
+
+if [ ! -d $LOGDIR ];
+then
+	mkdir -p $LOGDIR ;
+fi
+
+TIMESTAMP=`date +%y%m%d-%H%M`
+
+
 # Specmon with head-block. quits after a defined period of time. (-R)
-stdbuf -oL /home/pi/grc/specmon2/specmon_cli.py -G 0.9 -g 36 -f 446.1e6 -s 2e6 -D 10 -R 3590 > /tmp/specmon2-`date +%y%m%d-%H%M`.csv 2>> /tmp/specmon.debug
+stdbuf -oL /home/pi/specmon/specmon_cli.py -T $THRESHOLD -g $GAIN -f $FREQ -s $SAMPRATE -D $DECIM -R $RUNTIME > $LOGDIR/specmon2-$TIMESTAMP.csv 2>> $LOGDIR/specmon.debug
 
 # The next lines are for temperature and runtime debugging, mainly on a Raspberry Pi
 # TEMPLOG=/tmp/specmon2-`date +%y%m%d`.templog
