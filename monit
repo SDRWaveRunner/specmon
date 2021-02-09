@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Put to 1 to make this run
+ENABLED=1
+
 THRESHOLD=0.13
 GAIN=30
 FREQ=446.1e6
@@ -7,21 +10,29 @@ RUNTIME=3590
 DECIM=10
 SAMPRATE=2e6
 
+# Use the correct tool to run
+SPECMON=/home/pi/specmon/specmon_cli.py
+#SPECMON=/home/pi/specmon/specmon_cli_pluto.py
+
 LOGDIR=/tmp
 
-if [ ! -d $LOGDIR ];
+if [ $ENABLED == 1 ]; 
 then
-	mkdir -p $LOGDIR ;
+        if [ ! -d $LOGDIR ];
+        then
+                mkdir -p $LOGDIR ;
+        fi
+
+        TIMESTAMP=`date +%y%m%d-%H%M`
+
+
+        # Specmon with head-block. quits after a defined period of time. (-R)
+        stdbuf -oL $SPECMON -T $THRESHOLD -g $GAIN -f $FREQ -s $SAMPRATE -D $DECIM -R $RUNTIME > $LOGDIR/specmon2-$TIMESTAMP.csv 2>> $LOGDIR/specmon.debug
+
+        # The next lines are for temperature and runtime debugging, mainly on a Raspberry Pi
+        # TEMPLOG=/tmp/specmon2-`date +%y%m%d`.templog
+        # date >> $TEMPLOG
+        # Next line only for Raspberry Pi
+        # /opt/vc/bin/vcgencmd measure_temp >> $TEMPLOG
+        
 fi
-
-TIMESTAMP=`date +%y%m%d-%H%M`
-
-
-# Specmon with head-block. quits after a defined period of time. (-R)
-stdbuf -oL /home/pi/specmon/specmon_cli.py -T $THRESHOLD -g $GAIN -f $FREQ -s $SAMPRATE -D $DECIM -R $RUNTIME > $LOGDIR/specmon2-$TIMESTAMP.csv 2>> $LOGDIR/specmon.debug
-
-# The next lines are for temperature and runtime debugging, mainly on a Raspberry Pi
-# TEMPLOG=/tmp/specmon2-`date +%y%m%d`.templog
-# date >> $TEMPLOG
-# Next line only for Raspberry Pi
-# /opt/vc/bin/vcgencmd measure_temp >> $TEMPLOG
