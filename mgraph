@@ -34,7 +34,7 @@ set ylabel "Hour"
 set yrange [0:23]
 set cblabel "Percentage of usage"
 unset key
-load `${PALLET}'
+load '${PALLET}'
 plot "${OUTFILE}" using 12:2:6 with image pixels
 
 
@@ -46,7 +46,7 @@ set ylabel "Hour"
 set yrange [0:23]
 set cblabel "Number of openings"
 unset key
-load `${PALLET}'
+load '${PALLET}'
 plot "${OUTFILE}" using 12:2:10 with image pixels
 
 
@@ -58,7 +58,7 @@ set ylabel "Hour"
 set yrange [0:23]
 set cblabel "Avg open time (s)"
 unset key
-load `${PALLET}'
+load '${PALLET}'
 plot "${OUTFILE}" using 12:2:14 with image pixels
 
 
@@ -70,7 +70,7 @@ set ylabel "Hour"
 set yrange [0:23]
 set cblabel "Max open value"
 unset key
-load `${PALLET}'
+load '${PALLET}'
 plot "${OUTFILE}" using 12:2:16 with image pixels
 
 EOF
