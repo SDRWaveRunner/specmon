@@ -1,29 +1,60 @@
 #!/bin/bash
-BESTAND=$1
+#
+# Description: Wrapper to create daily graphs from parsed logfile
+#
+# Author: Bart Somers PE1RIK
+#
+
+if [ -z $1 ];
+then
+	echo "Usage: $0 <inputfile to plot>"
+      	exit 1
+else
+
+	BESTAND=${1}
+fi
+
+#OUTBESTAND=${BESTAND}-test
+OUTBESTAND=${BESTAND}
+
 gnuplot <<- EOF
-set terminal png size 1024,768
-set output '$BESTAND-percent.png'
+set terminal pngcairo size 1024,768
+set output '${OUTBESTAND}-percent.png'
 set style fill solid 0.5
-set style data boxes
-set yrange [0:40]
+set style data histograms
+set yrange [0:100]
+set xrange [0:24]
 set xlabel "Hours"
 set ylabel "Percent"
-#plot "$BESTAND" using 1:2 with lines
-plot "$BESTAND" using 2:6 linecolor rgb '#0072bd'
+plot "${BESTAND}" using 6 linecolor rgb '#0072bd'
+#plot "$BESTAND" using 2:6 linecolor rgb '#0072bd'
 
-set output '$BESTAND-opening.png'
+set output '${OUTBESTAND}-opening.png'
 set style fill solid 0.5
-set style data boxes
+set style data histograms
 unset yrange
+set xrange [0:24]
 set xlabel "Hours"
 set ylabel "Number of openings"
-plot "$BESTAND" using 2:10 linecolor rgb '#4dbeee'
+plot "${BESTAND}" using 10 linecolor rgb '#4dbeee'
 
-set output '$BESTAND-avgopen.png'
+set output '${OUTBESTAND}-avgopen.png'
 set style fill solid 0.5
-set style data boxes
+set style data histograms
 unset yrange
+set xrange [0:24]
 set xlabel "Hours"
-set ylabel "Avg open time"
-plot "$BESTAND" using 2:14 linecolor rgb '#77ac30'
+set ylabel "Avg open time (s)"
+plot "${BESTAND}" using 14 linecolor rgb '#77ac30'
+
+set output '${OUTBESTAND}-maxopen.png'
+set style fill solid 0.5
+set style data histograms
+unset yrange
+set xrange [0:24]
+set xlabel "Hours"
+set ylabel "Max open value"
+plot "${BESTAND}" using 16 linecolor rgb '#fde725'
 EOF
+
+exit 0

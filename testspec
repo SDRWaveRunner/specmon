@@ -1,62 +1,87 @@
 #!/usr/bin/python3
+#
+# Description: Tool to parse the logfiles to a daily log
+#
+# Author: Bart Somers PE1RIK
 
 from datetime import datetime
 import argparse
-#import sys
 
+# Parse the arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('-i', '--infile', type=str, help='Filename with vectors', required=True)
+parser.add_argument('-i', '--infile', type=str, help='Filename with output from specmon', required=True)
 parser.add_argument('-o', '--outfile', type=str, help='Filename where to put output', required=True)
+parser.add_argument('-v', '--version', type=int, help='Outputformat. use 2 for new format', required=False)
+parser.add_argument('-r', '--runtime', type=int, help='Runtime in seconds if not 3600', required=False)
 args = parser.parse_args()
-
-#if len(sys.argv) == 1:
-#    print ("Usage: " + sys.argv[0] + " <inputfile>")
-#    exit(1)
-
-#infile = sys.argv[1]
 
 fhandler = open (args.infile, "r")
 outhandler = open (args.outfile, "a")
 
+# Check if other runtime is given
+if args.runtime:
+        runtime = args.runtime
+else:
+        runtime = 3600
+
+# Pre-define variables
 totaalverschil = 0
-global start_uur
 start_uur = 0
 threshold = 0
 counter = 0
 dom = 0
 maxval = 0
+lastunder = 0
+lowsum = 0
+
+# Proces line by line
 for line in fhandler:
-        #line.rstrip()
         array = line.split(',')
-        #print ('line %s' % line + 'len: %i' % len(array) )
         if len(array) > 5:
             if array[0] == "A":
-                #print (len(array))
                 verschil = float(array[5]) - float(array[2])
+                lastunder = float(array[5])
                 totaalverschil += verschil
                 counter +=1
                 # Determine the max of measurement over the hour
                 if float(array[4]) > maxval:
                         maxval = float(array[4])
+                # Sum the lowavg
+                lowsum += float(array[1])
             elif array[0] == "S":
                 # Startup-line
-                #global start_uur
                 start_uur = array[3]
                 threshold = array[5].rstrip()
+                # Force the lastunder to be the end-time.
+                lastunder = float(array[1]) + float(runtime)
                 date_time = datetime.fromtimestamp(float(array[1]))
                 dom = date_time.strftime("%d")
-                
+                dow = date_time.strftime("%w")
+        elif array[0] == "A" and len(array) < 5:
+                # Probably no "Under threshold" written
+                verschil = abs(float(array[2]) - float(lastunder))
+                totaalverschil += verschil
+                counter +=1
 
-percentage = totaalverschil / 36
+# Calculate the percentage
+percentage = totaalverschil / (runtime/100)
 
 if counter == 0:
         average_open = 0
+        average_low = 0
 else:
         average_open = totaalverschil / counter
+        average_low = lowsum / counter
 
-#print ('Filename: %s' % infile + '\ttotaalverschil: %.1f' % totaalverschil + '\tpercentage: %.2f' % percentage )
-#print ('U %s V %.1f P %.2f T %s' % ( start_uur, totaalverschil, percentage, threshold ) )
-print ('U %s V %.2f P %.2f T %s O %i D %s A %.2f M %.2f' % ( start_uur, totaalverschil, percentage, threshold, counter, dom, average_open, maxval ), file=outhandler )
-#print ('Filename: %s' % infile + '\tpercentage: %2.2f' % percentage + '\ttotaalverschil: %.1f' % totaalverschil )
+if args.version == 2:
+        # Print new version string
+        print ('%s,%.2f,%.2f,%s,%i,%s,%.2f,%.2f,%s,%.2f' % ( start_uur, totaalverschil, percentage, threshold, counter, dom, average_open, maxval, dow, average_low ), file=outhandler )
+else:
+        # Print the original string
+        print ('U %s V %.2f P %.2f T %s O %i D %s A %.2f M %.2f W %s L %.2f' % ( start_uur, totaalverschil, percentage, threshold, counter, dom, average_open, maxval, dow, average_low ), file=outhandler )
 
-            
+# Closing up
+fhandler.close()            
+outhandler.close()
+
+exit(0)

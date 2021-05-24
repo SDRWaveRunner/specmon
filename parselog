@@ -1,18 +1,26 @@
 #!/bin/bash
+#
+# Description:	Wrapper to automate the parsing of the individual logfiles to 
+#		combined daily logs
+#
+# Author: Bart Somers PE1RIK
+#
 
 LOGDIR=/home/pi/log
 DATESTRING=`date --date=yesterday +%y%m%d`
 OUTSTRING=`date +%y%m%d`
 LOGPREFIX=specmon2
 ENABLED=1
+TESTSPEC=/home/pi/specmon/testspec
+MKGRAPH=/home/pi/specmon/mkgraph
 
-if [ $ENABLED == 1 ]; then
-    for i in `ls $LOGDIR/$LOGPREFIX-$DATESTRING*csv`; do
+if [ ${ENABLED} == 1 ]; then
+    for i in `ls ${LOGDIR}/${LOGPREFIX}-${DATESTRING}*csv`; do
         
-        /home/pi/specmon/testspec -i $i -o $LOGDIR/$OUTSTRING.plot;
+        ${TESTSPEC} -i $i -o ${LOGDIR}/${DATESTRING}.plot;
     done
     
-    /home/pi/specmon/mkgraph $LOGDIR/$OUTSTRING.plot
+    ${MKGRAPH} ${LOGDIR}/${DATESTRING}.plot
 
 fi
 

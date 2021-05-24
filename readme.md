@@ -1,192 +1,272 @@
-# SPECMON 
+# Specmon 2
+Specmon 2 is a rewrite of the original Specmon, version 1.
+The goal of this project is to enable **Spec**trum **Mon**itoring over a long period of time while logging short-term activities.
+Using this combined logging over time it is possible to generate statistical usage over time. 
+When plotting these results, usage statistics and usage patterns becomes visible.
 
-Specmon is a set of tools for statistical **spec**trum **mon**itoring. It's designed for long-term monitoring and reporting usage statistics for the selected frequency-range.
-Specmon is not capable of recording transmissions in any way.
-
-
-## The software
-The main tool is written in GNUradio [[5]]. Postprocessing is done in Python and graphs are plotted in GNUplot. The platforms used are Debian 10 and Raspbian 10.
-When running headless on a Raspberry Pi, a Raspberry Pi 3 or better is required.
+## Requirements
+Specmon is based on SDR techniques. A suitable Software Defined Radio receiver is required to run the software. As Specmon is written in GNURadio, all the supported SDR's are usable with this software.
+Besides the SDR, an antenna for the spectrum under investigation is required.
+As most SDR's lack good frontend-filtering, bandfiltering is required to maintain reliable results.
 
 ### Dependencies
+Specmon is build upon GNURadio, Python and Gnuplot.
+For Debian-based systems the dependencies can be installed with:
 
-`apt install gnuradio gnuplot gr-osmosdr`<br>
-This dependencies allows you to use [RTL-SDR] , [HackRF], and [BladeRF]. If you need support for your specific SDR, you need to install the dependencies too.<br> If you need support for [PlutoSDR], you need to install the next dependencies:
+`apt install gnuradio gnuplot gr-osmosdr python-numpy python3-numpy`
+
+For support for other SDR's, install the required modules. For example for PlutoSDR: 
+
 `apt install libiio0 libad9361-0 gr-iio`
 
-The default palette for the graphs can be changed by loading an additional palette from [gnuplot-palettes]. The weekgraphs are made with 'reds.pal'
+When using another SDR than the supported radio's under OsmoSDR, modify the flowgraph accordingly.
 
-## Running the software
+## Preparation
+Several steps are required to run specmon2:
 
-Running the software is quite easy but requires some preparations:
+1. Define the frequency band to monitor. For example: 2M HAM band, 144-146 MHz
+2. Define the required sample-rate. In this case 2Msps.
+3. Select the minimum frequency-size to trigger on: In this case FT8 as smallband mode needs to trigger the measurement. Using an FFT-size of 2048 results in a minimum monitoring of approx 1KHz (976Hz)
+4. Calibrate the receiver and create a calibration vector for the measurement. The process of calibration is described seperately.
+5. Determine the threshold for the measurement using live monitoring.
+6. Setup the monitoring
 
-1. Choose the frequency to be monitored
-2. Determine the required bandwidth, sample-rate and decimation
-	- This defines the centre-frequency, or frequency to tune the SDR to.
-3. Determine the threshold
-4. Select the time to run. Default is 3590 seconds.
+The gain settings of your SDR are highly dependent on the local environment and the antenna. Please use a low to moderate gain setting and use bandfilters to prevent overloading or images by out of band signals.
 
-The default runtime is 10 seconds less than one hour. This is to prevent the software is starting up again while just finishing the last measurement. 
+## Calibration
+Calibration is the process of alignment of the spectrum to the same value: That is, correcting the vector of FFT's to the same baseline. This generates a "flat spectrum". With this flat spectrum a single threshold value can be used during the monitoring process.
 
-### Example 
+Steps to take (in this order):
 
-We want to monitor the European PMR (Public Mobile Radio) band [[4]]. The defined frequency-range is 446.0 - 446.2 MHz so 200KHz bandwith.
-The center-frequency is 446.1MHz. You need to tune the SDR to this frequency.
-The required sample-rate should be 200.000 samples per second (200ksps). With the decimation-option this samplerate is created: Sample-rate 2Msps and a decimation 10 results in exactly 200.000 samples per second.
+### Zero vector
+Create a "zero" vector with the correct FFT-size and a constant value of zero: 
 
-I advice you to first run the GUI version to visual inspect the selected spectrum and to determine the threshold. From within Gnuradio-Companion, run specmon.grc, select the frequency (446.1e6), sample-rate (2e6), decimation (10) and run the flowchart.
+`./calvec -o zero-calvec-2048.vec -l 2048 -c 0`
 
-All depending on your SDR, gain, antenna and environment you can see the threshold drop when the frequency-band is idle. Take note of this value and increase it a little bit. For example, if it's idling around 0.75, increase to about 0.9 to prevent false-positives but prevent missing-out some band-usage. 
+This generates a file named zero-calvec-2048.vec with a "zero calibration" vector to use in the process.
 
-### Running the software headless
+### Dummy load measurement
+Connect the SDR to a dummyload to run this step. This is required as this corrects the spectrum.
+Run specmon2 for a minute with the required settings and record the vectors. These vectors are used to create the final calibration-vector:
 
-Specmon is designed to run one hour and restart for a new logfile. The previous logfile can be postprocessed and converted to a graph.
+`./specmon2.py -g 20 -f 145e6 -s 2e6 -c zero-calvec-2048.vec -F 2048 -d rtl=0 -R 60`
 
-"Compile" the flowgraph for headless monitoring to the python-file:
-`user@system:~$ grcc -d . specmon-cli.grc`
+Setting the threshold is not required yet.
 
-On your headless system run the software:
+### Create the calibration vector
+From the output, written in /tmp on the filesystem, generate the calibration vector:
 
-`./specmon-cli.py -f 446.1e6 -s 2e6 -D 10 -g 30 -T 0.8`
-And you should see lines like this:
+`./calvec -i /tmp/210512-0641-145000000-2000000-2048.pvector -o 210521-145e6-2e6-2048-2.vec -l 2048 -c 2`
 
-`A,1.1,1576821964.22,U,2.8,1576821964.78`
+This generates a calibration-vector:
 
-- A is *Above*,
-- 1.1 is the average low-value since the last measurement,
-- 1576821964.22 is the timestamp,
-- U is *Under* the threshold,
-- 2.8 is the maximum value reached during this trigger,
-- 1576821964.78 is the timestamp when dropped below the threshold. 
+- With length 2048
+- With a constant 2 added to the values (lifting the spectrum)
+- Created on May 21th 2021 06:41
+- For frequency 145MHz
+- And samplerate 2Msps
 
+This calibration-vector is used for the monitoring process
 
-If you are happy with the result, start running it from cron and let it run for several days:
-
-````
-crontab -l
-# m h  dom mon dow   command
-0 * * * *      /home/pi/bin/monit
-````
-The script monit is provided in the source-tree. This runs the tool for an hour and creates a logfile per hour.
-Additionaly it creates a logfile with end-time of the script and (for a Raspberry Pi) the temperature. This option is default disabled.
-
-### Postprocessing the data
-After running for 24 hours you can make a graph for the usage-statistics. Therefor you need to postprocess the data using "testspec":
+## Monitoring
+The monitoring is setup via cron using the tool `monit2`.
+Edit monit2 with the required settings:
 
 ````
-for i in `ls log/specmon2-200110*csv`; do ./testspec $i >> log/200110.log ; done
+# Put to 1 to make this run
+ENABLED=1
+
+# Put to 1 to automatic clean old recordings in /tmp
+# Files older than 2 days are removed
+AUTOCLEAN=1
+
+THRESHOLD=8.0
+GAIN=20
+FREQ=145e6
+RUNTIME=3590
+DEVICE="rtl=0"
+SAMPRATE=2e6
+CALVEC=/home/pi/specmon/210504-calvec-145M-2e6-2048-0.vec
+FFTSIZE=2048
+
+# Use the correct tool to run
+SPECMON=/home/pi/specmon/specmon2.py
+
+LOGDIR=/home/pi/log/145
 ````
-And now plot the graphs:
-`./mkgraph 200110.log`
-This results in 3 graphs:
-
-+ 200110.log-opening.png with the number of openings
-+ 200110.log-percent.png with the percentage of time "open" or "used"
-+ 200110.log-avgopen.png with the average time "open"
-
-View the graphs in your viewer. 
-After the first week you can see patterns of usage over the week. After several weeks you start seeing patterns per day. First combine a week of data:
-`cat day1.log day2.log day3.log day4.log day5.log day6.log day7.log >> week.log`
-and plot a 3D graph for the week:
-`./weekgraph week.log`
-This creates a 3D plot over the entire week.
-
----
-## Some suggestions for use
-### Frequency suggestions
-**EU 70cm analog repeaters:** 
-
-- Downlink: 430.000 - 430.400 MHz
-- Center-frequency: 430.200 MHz
-- Sample-rate: 2e6
-- Decimation: 5
-
-**EU 70cm DMR repeater:**
-
-- Downlink: 438.000 - 438.400 MHz
-- Center-frequency: 438.200 MHz
-- Sample-rate: 2e6
-- Decimation: 5
-
-**EU 2M analog repeaters:**
-
-- Downlink: 145.600 - 145.800 MHz
-- Center-frequency: 145.700 MHz
-- Sample-rate: 2e6
-- Decimation: 10
-
-**EU PMR446 [[4]]:**
-
-- Frequency span: 446.000 - 446.200 MHz
-- Center-frequency: 446.100 MHz
-- Sample-rate: 2e6
-- Decimation: 10
-
-Since the revision of june 2020 small bursts can trigger specmon and measured. AIS bursts are very short but can be measured. Settings are:
-
-**AIS bursts:**
-
-- Frequency span: 161.950 - 162.050 MHz
-- Center-frequency: 162.000 MHz
-- Sample-rate: 2e6
-- Decimation: 20
+Please be aware of the runtime. It defaults to 3590 seconds instead of 3600 seconds. Starting and stopping the measurement takes some seconds, as the SDR needs to be initialized. Running the tool with 3600 results in running just over an hour and preventing the next hour to start the measurement.
 
 
-### Verbose mode
-Determining the threshold can also be achieved in headless mode. Run specmon_cli.py with the `-v 1` option.
-See `specmon_cli.py -h` for all the options.
+Run monit via cron:
 
-### GNUradio 3.7 vs 3.8
-Although GNUradio 3.8 has been released for a while, i'm still using 3.7 branch. Why, would you ask. Pretty easy: Installing GNUradio on a raspberry pi for the headless mode is quite easy as it's in the repository. But it's the maintained 3.7 branch.
+`0 * * * *		/home/pi/specmon/monit2`
 
-### Other SDR's
-You can select other SDR's to use. Currently specmon is build around the Osmocom-Source so every SDR supported in this block, can be used:
-`-d rtl=00000234` for RTL-dongle with serial 234<br>
-`-d bladerf=0` for the first bladerf connected<br>
-`-d hackrf=0` for the first hackrf connected<br>
+## Postprocessing
+Postprocessing the logfiles can be automated with `parselog`.
+Check the settings in this file and run via cron:
 
-For other SDR's the source-block in the Gnuradio Flowgraph needs to be exchanged.
+`0 1 * * *		/home/pi/specmon/parselog`
 
-## Help
+This needs to run only once a day and will generate the graphs for the previous day:
+
+1. `YYMMDD.plot-avgopen.png` : Average time in seconds above the threshold.
+2. `YYMMDD.plot-maxopen.png` : Maximum measured value above the threshold.
+3. `YYMMDD.plot-opening.png` : Number of times the threshold is triggered.
+4. `YYMMDD.plot-percent.png` : Percentage of time the threshold is triggered.
+
+### Weekly or monthly graphs
+Weekly or monthly graphs can manually be made by combine the daily logs to one large file:
+
+`cat 2105*.plot >> May2021.plot`
+And create a monthly graph with mgraph: 
+
+`./mgraph May2021.plot`
+
+## Graphical view
+Specmon2 can run graphical with `specmon2_gui`. This does not log all the output but the spectrum and the vectors of the flattend spectrum are displayed, together with the threshold. 
+Specmon2_gui can be used to inspect the spectrum and select the right constant for the calibration-vector.
+
+## Replay of recorded data
+The unprocessed vectors from the measurements are stored in /tmp. These files can be graphical replayed, together with the calibration-vector to review the state while recorded. This can show RFI or other unknown transmissions.
+
+## Tools overview
+The following tools are included in this toolkit:
+
+### specmon2
+The commandline tool for long term monitoring
+  
+#### Options
 
 ````
-Usage: specmon_cli.py: [options]
+Options:
+  -h, --help            show this help message and exit
+  -b BBGAIN, --bbgain=BBGAIN
+                        Set BB-Gain [default=30]
+  -c CALIBVEC, --calibvec=CALIBVEC
+                        Set Calibration Vector [default=0]
+  -d DEVICEID, --deviceid=DEVICEID
+                        Set Device ID [default=rtl=00000201]
+  -F FFTSIZE, --fftsize=FFTSIZE
+                        Set FFT size [default=1024]
+  -f FREQ, --freq=FREQ  Set Frequency [default=145.675M]
+  -g RFGAIN, --rfgain=RFGAIN
+                        Set RF-Gain [default=40]
+  -R RUNTIME, --runtime=RUNTIME
+                        Set runtime [default=3590]
+  -s SAMP_RATE, --samp-rate=SAMP_RATE
+                        Set Sample Rate [default=2.0M]
+  -T THRESHOLD, --threshold=THRESHOLD
+                        Set Threshold [default=100.0m]
+  -v VERBOSE, --verbose=VERBOSE
+                        Set Print verbose values [default=0]
+````
+
+### Specmon2_gui
+Specmon2 but with graphical display. To be used for manual monitoring and tuning of parameters
+
+#### Options
+
+````
+Usage: specmon2_gui.py: [options]
 
 Options:
   -h, --help            show this help message and exit
   -b BBGAIN, --bbgain=BBGAIN
                         Set BB-Gain [default=30]
-  -D DECIMATION, --decimation=DECIMATION
-                        Set Decimation [default=10]
+  -c CALIBVEC, --calibvec=CALIBVEC
+                        Set Calibration Vector [default=0]
   -d DEVICEID, --deviceid=DEVICEID
                         Set Device ID [default=rtl=00000201]
-  -f FREQ, --freq=FREQ  Set Frequency [default=431.0M]
-  -g RFGAIN, --rfgain=RFGAIN
-                        Set RF-Gain [default=30]
+  -R RUNTIME, --runtime=RUNTIME
+                        Set runtime [default=3590]
   -s SAMP_RATE, --samp-rate=SAMP_RATE
                         Set Sample Rate [default=2.0M]
-  -T THRESHOLD, --threshold=THRESHOLD
-                        Set Threshold [default=60.0]
   -v VERBOSE, --verbose=VERBOSE
-                        Set Verbose [default=0]
-  -R RUNTIME, --runtime=RUNTIME
-  						Set Runtime in seconds [default=3590]
+                        Set Print verbose values [default=0]
+  -F FFTSIZE, --fftsize=FFTSIZE
+                        Set FFT size [default=1024]
+
 ````
-Be aware that sample-rate and frequency must be in scientific notation. For example: `-s 2e6 -D 10 -f 446.1e6`.
 
-## Revisions
-August 2020:
-Some minor updates on documentation and the script for running specmon from cron. Printing 2 decimals to increase resolution in testspec.
+### calvec
+Tool to create calibration vector, based on real measurement-data or a constant vector.
 
-June 2020:
-Software is capable of measuring shorter bursts. 
-Reporting now has an average of the "low values", i.e. under the threshold, since the last trigger of the threshold.
-Reporting the max value measured during the trigger of the threshold.
+#### Options
 
-[RTL-SDR]: https://www.rtl-sdr.com/buy-rtl-sdr-dvb-t-dongles/
-[HackRF]: https://greatscottgadgets.com/hackrf/
-[PlutoSDR]: https://www.analog.com/en/design-center/evaluation-hardware-and-software/evaluation-boards-kits/adalm-pluto.html#eb-overview
-[BladeRF]: https://www.nuand.com/
-[4]: https://en.wikipedia.org/wiki/PMR446
-[5]: https://www.gnuradio.org/
-[gnuplot-palettes]: https://github.com/Gnuplotting/gnuplot-palettes
+````
+usage: calvec [-h] [-i INFILE] -o OUTFILE -c CONSTANT -l LENGTH
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INFILE, --infile INFILE
+                        Filename with vectors
+  -o OUTFILE, --outfile OUTFILE
+                        Filename where to put output
+  -c CONSTANT, --constant CONSTANT
+                        Constant to use for calculation
+  -l LENGTH, --length LENGTH
+                        Vector-length to parse
+
+````
+
+### mkgraph
+This tool is used to create the graphs from the parsed data.
+Usage: `./mkgraph <inputfile>`
+
+### monit2
+Shellscript to automate monitoring and cleanup from old loggings. The usage of monit2 is described above
+
+### mgraph
+Shellscript to generate the monthly-graph from the concatenated logfiles.
+Usage: `./mgraph <concatenated_logfile>`
+
+### parselog
+Shellscript to automate the parsing of logfiles and creation of the graphs. To be run from cron so no options required.
+See the shellscript for the correct paths.
+
+### testspec
+This is the parser for the logfiles from specmon2. It is called from parselog but can be used manually too.
+
+#### Options
+
+````
+usage: calvec [-h] [-i INFILE] -o OUTFILE -c CONSTANT -l LENGTH
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INFILE, --infile INFILE
+                        Filename with vectors
+  -o OUTFILE, --outfile OUTFILE
+                        Filename where to put output
+  -c CONSTANT, --constant CONSTANT
+                        Constant to use for calculation
+  -l LENGTH, --length LENGTH
+                        Vector-length to parse
+
+````
+
+## Usage suggestions
+Below are some suggestions to use the software. These suggestions are focused on the HAM-radio bands but probably other bands can monitored too. 
+
+### 2M HAM band
+
+ - Frequency : 144 - 146 MHz
+ - Tuner frequency: 145e6
+ - Sample rate : 2e6
+ - FFT-size: 2048
+ 
+### 6M HAM band
+
+ - Frequency : 50 - 52 MHz
+ - Tuner frequency : 51e6
+ - Sample rate : 2e6
+ - FFT-size : 2048
+ 
+### 70cm HAM band
+This band is 10MHz wide. The sample-rate must be supported by your SDR. A LimeSDR mini or Airspy R2 support this. This comination of sample rate and FFT-size is likely too much for a Raspberry Pi.
+
+ - Frequency : 430 - 440 MHz
+ - Tuner frequency : 435e6
+ - Sample rate : 10e6
+ - FFT-size : 8192
+ 

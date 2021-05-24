@@ -1,0 +1,62 @@
+#!/bin/bash
+#
+# Description: 
+# Wrapper for specmon2 to run from cron
+# Auto clean old recordings from /tmp
+#
+# Author: Bart Somers PE1RIK
+# 
+
+# Put to 1 to make this run
+ENABLED=1
+
+# Put to 1 to automatic clean old recordings in /tmp
+# Files older than 2 days are removed
+AUTOCLEAN=1
+
+THRESHOLD=8.0
+GAIN=20
+FREQ=145e6
+RUNTIME=3590
+DEVICE="rtl=0"
+SAMPRATE=2e6
+CALVEC=/home/pi/specmon/210504-calvec-145M-2e6-2048-0.vec
+FFTSIZE=2048
+
+# Use the correct tool to run
+SPECMON=/home/pi/specmon/specmon2.py
+
+# Define the logdir
+LOGDIR=/home/pi/log/145
+
+# Start monitoring if enabled.
+if [ $ENABLED == 1 ]; 
+then
+        if [ ! -d $LOGDIR ];
+        then
+                mkdir -p $LOGDIR ;
+        fi
+
+        TIMESTAMP=`date +%y%m%d-%H%M`
+
+
+        # Specmon with head-block. quits after a defined period of time. (-R)
+        stdbuf -oL $SPECMON -d $DEVICE -c $CALVEC -T $THRESHOLD -g $GAIN -f $FREQ -s $SAMPRATE -R $RUNTIME -F $FFTSIZE > $LOGDIR/specmon2-$TIMESTAMP.csv 2>> $LOGDIR/specmon2.debug
+
+        # The next lines are for temperature and runtime debugging, mainly on a Raspberry Pi
+        # TEMPLOG=/tmp/specmon2-`date +%y%m%d`.templog
+        # date >> $TEMPLOG
+        # Next line only for Raspberry Pi
+        # /opt/vc/bin/vcgencmd measure_temp >> $TEMPLOG
+        
+fi
+
+# Check to see if autocleaning is enabled.
+# Defaults to 2 days old logfiles.
+if [ $AUTOCLEAN == 1 ];
+then
+        cleandate=$(date --date="2 days ago" +%y%m%d)
+        rm -f /tmp/${cleandate}*pvector
+fi
+
+exit 0

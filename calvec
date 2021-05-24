@@ -1,0 +1,61 @@
+#!/usr/bin/python3
+#
+# Description:      Calculate a calibration-vector for specmon2
+#
+# Author: Bart Somers PE1RIK
+#
+
+import argparse
+import array  #used for fromfile
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-i', '--infile', type=str, help='Filename with vectors', required=False)
+parser.add_argument('-o', '--outfile', type=str, help='Filename where to put output', required=True)
+parser.add_argument('-c', '--constant', type=float, help='Constant to use for calculation', required=True)
+parser.add_argument('-l', '--length', type=int, help='Vector-length to parse', required=True)
+args = parser.parse_args()
+
+constant_array = [args.constant] * args.length
+readlist = array.array('f')
+
+# Name:     DerdeMethode
+# Desc:     Create a calibration-vector, based on the inputvector
+# Input:    readlist, outputfile, contstant
+# Output:   Calibration vector in outputfile
+# Return:   -
+def DerdeMethode(readlist,outputfile, constant):
+    testout = array.array('f')
+    for i in range(len(readlist)):
+        res = constant - readlist[i]
+        testout.append(float(res))
+        
+    #print (testout)
+    fout = open(outputfile,'wb')
+    testout.tofile(fout)
+    fout.close()
+
+if args.infile:
+    # Input file is defined. Create a calibration outputfile
+
+    f=open(args.infile,"rb")
+
+    # Skip first few lines
+    for i in range(20):
+        readlist.fromfile(f, args.length)
+        del readlist[:]
+
+    # Now read the vector to use    
+    readlist.fromfile(f, args.length)
+    f.close()
+    
+    # Write the vector to file
+    DerdeMethode(readlist, args.outfile, args.constant)
+else:
+    # Inputfile is not defined. Create a vector with only the constant value
+    constant_array = array.array('f', [args.constant] * args.length)
+    fout = open(args.outfile,'wb')
+    constant_array.tofile(fout)
+    fout.close()
+
+exit(0)
+

@@ -1,0 +1,76 @@
+#!/bin/bash
+#
+# Description: Wrapper to create daily graphs from parsed logfile
+#
+# Author: Bart Somers PE1RIK
+#
+
+# Select the gnuplot-pallet to use. Suggestion: bentcoolwarm.pal
+PALLET=/mnt/space/bart/Download/gnuplot-palettes/bentcoolwarm.pal
+
+if [ ! -f ${PALLET} ];
+then
+    echo "GNUPLOT Pallet ${PALLET} not found"
+    exit 1 
+fi
+
+if [ -z $1 ];
+then
+	echo "Usage: $0 <inputfile to plot>"
+    exit 1
+else
+
+	OUTFILE=${1}
+fi
+
+#OUTFILE=${OUTFILE}-test
+
+gnuplot <<- EOF
+set terminal png size 1280,768
+set output '${OUTFILE}-month-percent.png'
+#set xrange [0:23]
+set xlabel "Day"
+set ylabel "Hour"
+set yrange [0:23]
+set cblabel "Percentage of usage"
+unset key
+load `${PALLET}'
+plot "${OUTFILE}" using 12:2:6 with image pixels
+
+
+set terminal png size 1280,768
+set output '${OUTFILE}-month-opening.png'
+#set xrange [0:23]
+set xlabel "Day"
+set ylabel "Hour"
+set yrange [0:23]
+set cblabel "Number of openings"
+unset key
+load `${PALLET}'
+plot "${OUTFILE}" using 12:2:10 with image pixels
+
+
+set terminal png size 1280,768
+set output '${OUTFILE}-month-avgopen.png'
+#set xrange [0:23]
+set xlabel "Day"
+set ylabel "Hour"
+set yrange [0:23]
+set cblabel "Avg open time (s)"
+unset key
+load `${PALLET}'
+plot "${OUTFILE}" using 12:2:14 with image pixels
+
+
+set terminal png size 1280,768
+set output '${OUTFILE}-month-maxopen.png'
+#set xrange [0:23]
+set xlabel "Day"
+set ylabel "Hour"
+set yrange [0:23]
+set cblabel "Max open value"
+unset key
+load `${PALLET}'
+plot "${OUTFILE}" using 12:2:16 with image pixels
+
+EOF
