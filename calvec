@@ -2,11 +2,12 @@
 #
 # Description:      Calculate a calibration-vector for specmon2
 #
-# Author: Bart Somers PE1RIK
+# Author:           Bart Somers PE1RIK
 #
 
 import argparse
 import array  #used for fromfile
+import numpy as np
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--infile', type=str, help='Filename with vectors', required=False)
@@ -44,8 +45,25 @@ if args.infile:
         readlist.fromfile(f, args.length)
         del readlist[:]
 
-    # Now read the vector to use    
-    readlist.fromfile(f, args.length)
+    ## Now read the vector to use    
+    #readlist.fromfile(f, args.length)
+    #f.close()
+    
+    # 210927 Test for more vectors
+    # Base is 5 vectors per second. 
+    # 20 vectors = 4 seconds
+    # 300 vectors = 1 minute
+    vecavg = 20
+    e = np.zeros(args.length)
+    for i in range(vecavg):
+        readlist.fromfile(f, args.length)
+        #print ("len readlist: ", len(readlist), " len e: ", len(e))
+        e = np.add(e,readlist)
+        # Now clear the list from file.
+        del readlist[:]
+    
+    # Divide by number of vectors
+    readlist = np.divide(e,vecavg)
     f.close()
     
     # Write the vector to file

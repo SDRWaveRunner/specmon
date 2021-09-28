@@ -38,6 +38,7 @@ then
         fi
 
         TIMESTAMP=`date +%y%m%d-%H%M`
+        echo -e "\nLog started at:  ${TIMESTAMP}\n" >> $LOGDIR/specmon2.debug
 
 
         # Specmon with head-block. quits after a defined period of time. (-R)

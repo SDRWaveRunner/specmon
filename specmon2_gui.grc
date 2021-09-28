@@ -157,7 +157,11 @@
     <param>
       <key>comment</key>
       <value>Integration count.
-Also used for normalisation</value>
+Also used for normalisation
+
+int(samp_rate/(fftsize * 5))
+
+geeft 5 vectoren per seconde (200ms)</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -165,7 +169,7 @@ Also used for normalisation</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1120, 632)</value>
+      <value>(1016, 632)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -177,7 +181,7 @@ Also used for normalisation</value>
     </param>
     <param>
       <key>value</key>
-      <value>400</value>
+      <value>int(samp_rate/(fftsize * 5))</value>
     </param>
   </block>
   <block>
@@ -3291,7 +3295,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             print ("Current value: %.2f M %1.2f N %i S %.3f" % ( curval, self.maxval, self.lowcounter, self.sumval ) )
            
         if curval &gt; self.maxval:
-			self.maxval = curval
+            self.maxval = curval
         
         if curval &gt; self.threshold and self.start_state == 0:
             self.start_state = 1

@@ -94,6 +94,10 @@
     <param>
       <key>comment</key>
       <value>Integration count.
+
+Baseline 5 vectors per second.
+This yields to 200ms / vector
+
 Also used for normalisation</value>
     </param>
     <param>
@@ -102,7 +106,7 @@ Also used for normalisation</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(888, 368)</value>
+      <value>(888, 328)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -114,7 +118,7 @@ Also used for normalisation</value>
     </param>
     <param>
       <key>value</key>
-      <value>400</value>
+      <value>int(samp_rate/(fftsize * 5))</value>
     </param>
   </block>
   <block>
@@ -298,9 +302,7 @@ Also used for normalisation</value>
     <param>
       <key>comment</key>
       <value>Debug option to save vector before
-calibration and specmon2 logics.
-
-Disable when debug is not required.</value>
+calibration and specmon2 logics</value>
     </param>
     <param>
       <key>affinity</key>
@@ -1011,7 +1013,39 @@ Disable when debug is not required.</value>
     </param>
     <param>
       <key>value</key>
-      <value>145e6</value>
+      <value>145.675e6</value>
+    </param>
+  </block>
+  <block>
+    <key>import</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value>Required when not 
+using osmocom source</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(16, 680)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>import_0</value>
+    </param>
+    <param>
+      <key>import</key>
+      <value>import time</value>
     </param>
   </block>
   <block>
@@ -2612,23 +2646,26 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         print ("S,%.2f,H,%s,T,%.2f" % ( time.time(), str(time.strftime("%H")), threshold ) )
         
     def work(self, input_items, output_items):
-        """example: multiply with constant"""
-        #output_items[0][:] = input_items[0] * self.example_param
         speclist = np.array(input_items[0][0])
+        # Peak for max-value
         curval = np.amax(speclist)
+        # Median for median noise level
+        noiseval = np.median(speclist)
         if self.verbose == 1:
             #print ("%.2f" % curval)
             print ("Current value: %.2f M %1.2f N %i S %.3f" % ( curval, self.maxval, self.lowcounter, self.sumval ) )
            
         if curval &gt; self.maxval:
-			self.maxval = curval
+            self.maxval = curval
         
         if curval &gt; self.threshold and self.start_state == 0:
+            # Signal triggers the threshold
             self.start_state = 1
             lowavg = self.sumval / self.lowcounter
             #print ("A,%.2f,%.2f," % ( curval, time.time() ), end="" )
             print ("A,%.2f,%.2f," % ( lowavg, time.time() ), end="" )
         elif curval &lt; self.threshold and self.start_state == 1:
+            # Signal drops below threshold
             #print ("U,%.2f,%.2f" % ( curval, time.time() ), end="\n")
             print ("U,%.2f,%.2f" % ( self.maxval, time.time() ), end="\n")
             self.start_state = 0
@@ -2636,7 +2673,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             self.lowcounter = 1
             self.maxval = 0            
         else:
-            self.sumval += curval
+            # Signal remains under threshold
+            #self.sumval += curval
+            self.sumval += noiseval
             self.lowcounter += 1
 			
         
