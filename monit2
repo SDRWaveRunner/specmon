@@ -14,20 +14,20 @@ ENABLED=1
 # Files older than 2 days are removed
 AUTOCLEAN=1
 
-THRESHOLD=8.0
-GAIN=20
+THRESHOLD=10.0
+GAIN=40
 FREQ=145e6
-RUNTIME=3590
+RUNTIME=3580
 DEVICE="rtl=0"
 SAMPRATE=2e6
-CALVEC=/home/pi/specmon/210504-calvec-145M-2e6-2048-0.vec
+CALVEC=/home/bart/grc/calvec-145M-G40-2048.0.vec
 FFTSIZE=2048
 
 # Use the correct tool to run
-SPECMON=/home/pi/specmon/specmon2.py
+SPECMON=/home/bart/grc/specmon2.py
 
 # Define the logdir
-LOGDIR=/home/pi/log/145
+LOGDIR=/home/bart/log/145
 
 # Start monitoring if enabled.
 if [ $ENABLED == 1 ]; 
@@ -42,7 +42,7 @@ then
 
 
         # Specmon with head-block. quits after a defined period of time. (-R)
-        stdbuf -oL $SPECMON -d $DEVICE -c $CALVEC -T $THRESHOLD -g $GAIN -f $FREQ -s $SAMPRATE -R $RUNTIME -F $FFTSIZE > $LOGDIR/specmon2-$TIMESTAMP.csv 2>> $LOGDIR/specmon2.debug
+        stdbuf -oL $SPECMON -d $DEVICE -c $CALVEC -T $THRESHOLD -g $GAIN -f $FREQ -s $SAMPRATE -R $RUNTIME -F $FFTSIZE -O $LOGDIR/specmon2-$TIMESTAMP.csv >> $LOGDIR/specmon2.debug 2>&1
 
         # The next lines are for temperature and runtime debugging, mainly on a Raspberry Pi
         # TEMPLOG=/tmp/specmon2-`date +%y%m%d`.templog
