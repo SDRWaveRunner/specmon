@@ -10,7 +10,7 @@ options:
     gen_linking: dynamic
     generate_options: no_gui
     hier_block_src_path: '.:'
-    id: specmon2
+    id: specmon2_auto
     max_nouts: '0'
     output_language: python
     placement: (0,0)
@@ -841,39 +841,49 @@ blocks:
       \ print_function\nimport numpy as np\nfrom gnuradio import gr\nimport time\n\
       \n\nclass blk(gr.sync_block):  # other base classes are basic_block, decim_block,\
       \ interp_block\n    \"\"\"Specmon data analysis block. \n    This block is the\
-      \ improved version for specmon\n    \"\"\"\n\n\t# Don't use \"logfile\" as varname\
-      \ as it's reserved in GRC\n    def __init__(self, fftsize=1024, start_state=0,\
+      \ improved version for specmon.\n    220626 Tests with auto threshold value\n\
+      \    \n    Threshold value is initial threshold. Will be auto calculated from\
+      \ the noise.\n    Initial threshold is value above \"zero\" so will act as a\
+      \ \"squelch\" value.\n    \n    **WARNING**\n    Value for lowavg in output\
+      \ is current threshold\n    \"\"\"\n\n\t# Don't use \"logfile\" as varname as\
+      \ it's reserved in GRC\n    def __init__(self, fftsize=1024, start_state=0,\
       \ threshold=1.0, verbose=0, reportfile=\"/tmp/logfile.csv\"):  # only default\
       \ arguments here\n        \"\"\"arguments to this function show up as parameters\
       \ in GRC\"\"\"\n        self.fftsize = fftsize\n        self.start_state = start_state\n\
-      \        self.threshold = threshold\n        self.verbose = verbose\n      \
-      \  self.maxval = 0\n        self.sumval = 0\n        self.lowcounter = 1\n \
-      \       self.reportfile = reportfile\n        gr.sync_block.__init__(\n    \
-      \        self,\n            name='Specmon2',   # will show up in GRC\n     \
-      \       in_sig=[(np.float32,self.fftsize)],\n            out_sig=None\n    \
-      \    )\n        # Print startline\n        self.outfile = open(reportfile, \"\
-      a\")\n        print (\"S,%.2f,H,%s,T,%.2f\" % ( time.time(), str(time.strftime(\"\
-      %H\")), threshold ), file=self.outfile, flush=True )\n        \n    def work(self,\
-      \ input_items, output_items):\n        speclist = np.array(input_items[0][0])\n\
-      \        # Peak for max-value\n        curval = np.amax(speclist)\n        #\
-      \ Median for median noise level\n        noiseval = np.median(speclist)\n  \
-      \      if self.verbose == 1:\n            #print (\"%.2f\" % curval)\n     \
-      \       print (\"Current value: %.2f M %1.2f N %i S %.3f\" % ( curval, self.maxval,\
-      \ self.lowcounter, self.sumval ) )\n           \n        if curval > self.maxval:\n\
-      \            self.maxval = curval\n        \n        if curval > self.threshold\
-      \ and self.start_state == 0:\n            # Signal triggers the threshold\n\
-      \            self.start_state = 1\n            lowavg = self.sumval / self.lowcounter\n\
-      \            #print (\"A,%.2f,%.2f,\" % ( curval, time.time() ), end=\"\" )\n\
-      \            print (\"A,%.2f,%.2f,\" % ( lowavg, time.time() ), end=\"\", file=self.outfile\
-      \ )\n        elif curval < self.threshold and self.start_state == 1:\n     \
-      \       # Signal drops below threshold\n            #print (\"U,%.2f,%.2f\"\
-      \ % ( curval, time.time() ), end=\"\\n\")\n            print (\"U,%.2f,%.2f\"\
-      \ % ( self.maxval, time.time() ), end=\"\\n\", file=self.outfile, flush=True)\n\
-      \            self.start_state = 0\n            self.sumval = 0\n           \
-      \ self.lowcounter = 1\n            self.maxval = 0            \n        else:\n\
-      \            # Signal remains under threshold\n            #self.sumval += curval\n\
-      \            self.sumval += noiseval\n            self.lowcounter += 1\n\t\t\
-      \t\n        \n        return len(input_items[0])\n"
+      \        self.threshold = threshold\n        # Same value fixed in var\n   \
+      \     self.initthresh = threshold\n        self.verbose = verbose\n        self.maxval\
+      \ = 0\n        self.sumval = 0\n        self.lowcounter = 1\n        self.reportfile\
+      \ = reportfile\n        gr.sync_block.__init__(\n            self,\n       \
+      \     name='Specmon2_auto',   # will show up in GRC\n            in_sig=[(np.float32,self.fftsize)],\n\
+      \            out_sig=None\n        )\n        # Print startline\n        self.outfile\
+      \ = open(reportfile, \"a\")\n        print (\"S,%.2f,H,%s,T,%.2f\" % ( time.time(),\
+      \ str(time.strftime(\"%H\")), threshold ), file=self.outfile, flush=True )\n\
+      \        \n    def work(self, input_items, output_items):\n        speclist\
+      \ = np.array(input_items[0][0])\n        # Peak for max-value\n        curval\
+      \ = np.amax(speclist)\n        # Median for median noise level\n        noiseval\
+      \ = np.median(speclist)\n        \n        # Auto increment test\n        #\
+      \ Order list first\n        olist = np.sort(speclist)\n        lowlimit = np.median(olist[:(int(self.fftsize/2))])\n\
+      \        \n        # Increase this value with initial threshold value. Act as\
+      \ squelch.\n        self.threshold = lowlimit + self.initthresh\n        \n\
+      \        \n        if self.verbose == 1:\n            #print (\"%.2f\" % curval)\n\
+      \            print (\"Current value: %.2f M %1.2f N %i S %.3f T %.3f\" % ( curval,\
+      \ self.maxval, self.lowcounter, self.sumval, self.threshold ) )\n          \
+      \ \n        if curval > self.maxval:\n            self.maxval = curval\n   \
+      \     \n        if curval > self.threshold and self.start_state == 0:\n    \
+      \        # Signal triggers the threshold\n            self.start_state = 1\n\
+      \            lowavg = self.sumval / self.lowcounter\n            #print (\"\
+      A,%.2f,%.2f,\" % ( curval, time.time() ), end=\"\" )\n            #print (\"\
+      A,%.2f,%.2f,\" % ( lowavg, time.time() ), end=\"\", file=self.outfile )\n  \
+      \          print (\"A,%.2f,%.2f,\" % ( self.threshold, time.time() ), end=\"\
+      \", file=self.outfile )\n        elif curval < self.threshold and self.start_state\
+      \ == 1:\n            # Signal drops below threshold\n            #print (\"\
+      U,%.2f,%.2f\" % ( curval, time.time() ), end=\"\\n\")\n            print (\"\
+      U,%.2f,%.2f\" % ( self.maxval, time.time() ), end=\"\\n\", file=self.outfile,\
+      \ flush=True)\n            self.start_state = 0\n            self.sumval = 0\n\
+      \            self.lowcounter = 1\n            self.maxval = 0            \n\
+      \        else:\n            # Signal remains under threshold\n            #self.sumval\
+      \ += curval\n            self.sumval += noiseval\n            self.lowcounter\
+      \ += 1\n\t\t\t\n        \n        return len(input_items[0])\n"
     affinity: ''
     alias: ''
     comment: ''
@@ -885,10 +895,14 @@ blocks:
     threshold: threshold
     verbose: verbose
   states:
-    _io_cache: ('Specmon2', 'blk', [('fftsize', '1024'), ('start_state', '0'), ('threshold',
-      '1.0'), ('verbose', '0'), ('reportfile', "'/tmp/logfile.csv'")], [('0', 'float',
-      1024)], [], 'Specmon data analysis block. \n    This block is the improved version
-      for specmon\n    ', ['fftsize', 'reportfile', 'start_state', 'threshold', 'verbose'])
+    _io_cache: ('Specmon2_auto', 'blk', [('fftsize', '1024'), ('start_state', '0'),
+      ('threshold', '1.0'), ('verbose', '0'), ('reportfile', "'/tmp/logfile.csv'")],
+      [('0', 'float', 1024)], [], 'Specmon data analysis block. \n    This block is
+      the improved version for specmon.\n    220626 Tests with auto threshold value\n    \n    Threshold
+      value is initial threshold. Will be auto calculated from the noise.\n    Initial
+      threshold is value above "zero" so will act as a "squelch" value.\n    \n    **WARNING**\n    Value
+      for lowavg in output is current threshold\n    ', ['fftsize', 'reportfile',
+      'start_state', 'threshold', 'verbose'])
     bus_sink: false
     bus_source: false
     bus_structure: null
