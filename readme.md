@@ -68,6 +68,13 @@ This generates a calibration-vector:
 
 This calibration-vector is used for the monitoring process
 
+### Determine the threshold
+The threshold is the powerlevel value which a transmission should reach before it is considered as a transmission. According to the ITU it should be 20dB above the noise level however this is a high limit for relatie low power transmissions or weak transmissions, caused by a higher free-space path loss. These latter transmissions are not recorded as transmissions with a high threshold. Using a low threshold on the other hand will cause false positives due to short term impulses, caused by RFI or noisefloor variances.
+The threshold can be controlled either afterwards using a replay from previous monitoring or by inspecting the measurements using specmon_gui.
+
+#### Auto Threshold calculation
+Specmon2 is capable of adjusting the threshold value, based on the variances in the measured noise. The value passed to the parameter "threshold" is considered as the value above the measured noise level. During the monitoring process the actual threshold is adopted and printed in the raw measurement files.
+
 ## Monitoring
 The monitoring is setup via cron using the tool `monit2`.
 Edit monit2 with the required settings:
@@ -138,26 +145,31 @@ The commandline tool for long term monitoring
 #### Options
 
 ````
-Options:
+usage: specmon2.py [-h] [-b BBGAIN] [-c CALIBVEC] [-d DEVICEID] [-F FFTSIZE] [-f FREQ] [-O OUTFILE] [-g RFGAIN] [-R RUNTIME]
+                   [-s SAMP_RATE] [-T THRESHOLD] [-v VERBOSE]
+
+optional arguments:
   -h, --help            show this help message and exit
-  -b BBGAIN, --bbgain=BBGAIN
+  -b BBGAIN, --bbgain BBGAIN
                         Set BB-Gain [default=30]
-  -c CALIBVEC, --calibvec=CALIBVEC
-                        Set Calibration Vector [default=0]
-  -d DEVICEID, --deviceid=DEVICEID
-                        Set Device ID [default=rtl=00000201]
-  -F FFTSIZE, --fftsize=FFTSIZE
+  -c CALIBVEC, --calibvec CALIBVEC
+                        Set Calibration Vector [default='0']
+  -d DEVICEID, --deviceid DEVICEID
+                        Set Device ID [default='rtl=00000201']
+  -F FFTSIZE, --fftsize FFTSIZE
                         Set FFT size [default=1024]
-  -f FREQ, --freq=FREQ  Set Frequency [default=145.675M]
-  -g RFGAIN, --rfgain=RFGAIN
+  -f FREQ, --freq FREQ  Set Frequency [default='145.0M']
+  -O OUTFILE, --outfile OUTFILE
+                        Set Output File [default='/tmp/logfile.csv']
+  -g RFGAIN, --rfgain RFGAIN
                         Set RF-Gain [default=40]
-  -R RUNTIME, --runtime=RUNTIME
+  -R RUNTIME, --runtime RUNTIME
                         Set runtime [default=3590]
-  -s SAMP_RATE, --samp-rate=SAMP_RATE
-                        Set Sample Rate [default=2.0M]
-  -T THRESHOLD, --threshold=THRESHOLD
-                        Set Threshold [default=100.0m]
-  -v VERBOSE, --verbose=VERBOSE
+  -s SAMP_RATE, --samp-rate SAMP_RATE
+                        Set Sample Rate [default='2.0M']
+  -T THRESHOLD, --threshold THRESHOLD
+                        Set Threshold [default='100.0m']
+  -v VERBOSE, --verbose VERBOSE
                         Set Print verbose values [default=0]
 ````
 
@@ -167,25 +179,27 @@ Specmon2 but with graphical display. To be used for manual monitoring and tuning
 #### Options
 
 ````
-Usage: specmon2_gui.py: [options]
+usage: specmon2_gui.py [-h] [-b BBGAIN] [-c CALIBVEC] [-d DEVICEID] [-F FFTSIZE] [-O OUTFILE] [-R RUNTIME] [-s SAMP_RATE]
+                       [-v VERBOSE]
 
-Options:
+optional arguments:
   -h, --help            show this help message and exit
-  -b BBGAIN, --bbgain=BBGAIN
+  -b BBGAIN, --bbgain BBGAIN
                         Set BB-Gain [default=30]
-  -c CALIBVEC, --calibvec=CALIBVEC
-                        Set Calibration Vector [default=0]
-  -d DEVICEID, --deviceid=DEVICEID
-                        Set Device ID [default=rtl=00000201]
-  -R RUNTIME, --runtime=RUNTIME
-                        Set runtime [default=3590]
-  -s SAMP_RATE, --samp-rate=SAMP_RATE
-                        Set Sample Rate [default=2.0M]
-  -v VERBOSE, --verbose=VERBOSE
-                        Set Print verbose values [default=0]
-  -F FFTSIZE, --fftsize=FFTSIZE
+  -c CALIBVEC, --calibvec CALIBVEC
+                        Set Calibration Vector [default='/home/bart/grc/210926-zero-2048.vec']
+  -d DEVICEID, --deviceid DEVICEID
+                        Set Device ID [default='rtl=0']
+  -F FFTSIZE, --fftsize FFTSIZE
                         Set FFT size [default=1024]
-
+  -O OUTFILE, --outfile OUTFILE
+                        Set Output File [default='/tmp/logfile.csv']
+  -R RUNTIME, --runtime RUNTIME
+                        Set runtime [default=3590]
+  -s SAMP_RATE, --samp-rate SAMP_RATE
+                        Set Sample Rate [default='2.0M']
+  -v VERBOSE, --verbose VERBOSE
+                        Set Print verbose values [default=0]
 ````
 
 ### calvec
@@ -253,20 +267,20 @@ Below are some suggestions to use the software. These suggestions are focused on
  - Frequency : 144 - 146 MHz
  - Tuner frequency: 145e6
  - Sample rate : 2e6
- - FFT-size: 2048
+ - FFT-size: 2048 / 4096
  
 ### 6M HAM band
 
  - Frequency : 50 - 52 MHz
  - Tuner frequency : 51e6
  - Sample rate : 2e6
- - FFT-size : 2048
+ - FFT-size : 2048 / 4096
  
 ### 70cm HAM band
-This band is 10MHz wide. The sample-rate must be supported by your SDR. A LimeSDR mini or Airspy R2 support this. This comination of sample rate and FFT-size is likely too much for a Raspberry Pi.
+This band is 10MHz wide. The sample-rate must be supported by your SDR. A LimeSDR mini or Airspy R2 support this. This combination of sample rate and FFT-size is likely too much for a Raspberry Pi.
 
  - Frequency : 430 - 440 MHz
  - Tuner frequency : 435e6
  - Sample rate : 10e6
- - FFT-size : 8192
+ - FFT-size : 16384
  
