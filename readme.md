@@ -129,12 +129,17 @@ And create a monthly graph with mgraph:
 
 `./mgraph May2021.plot`
 
-## Graphical view
+## Specmon GUI
 Specmon2 can run graphical with `specmon2_gui`. This does not log all the output but the spectrum and the vectors of the flattend spectrum are displayed, together with the threshold. 
 Specmon2_gui can be used to inspect the spectrum and select the right constant for the calibration-vector.
 
+## Live view of data
+During the monitoring process, it is possible to connect to the ZMQ port for live view of the data, that are the vectors to be processed by specmon, remotely.
+For this a tool is added, specreceive, which can connect to the ZMQ port 50001, on the system, running specmon.
+As this only sends the integrated vectors, the amount is data is fairly low and can be send over a VPN or remote connection.
+
 ## Replay of recorded data
-The unprocessed vectors from the measurements are stored in /tmp. These files can be graphical replayed, together with the calibration-vector to review the state while recorded. This can show RFI or other unknown transmissions.
+The unprocessed vectors from the measurements are stored in /tmp. The vectors are not corrected yet with the calibration vector and thus named "unprocessed". These files can be graphical replayed, together with the calibration-vector to review the state while recorded. This can show RFI or other unknown transmissions, or can be used to modify the threshold value.
 
 ## Tools overview
 The following tools are included in this toolkit:
@@ -259,6 +264,19 @@ optional arguments:
 
 ````
 
+### specreceive
+This is the ZMQ receiver for live remote view.
+Specreceive does not have commandline options but the flowgraph holds multiple variables which need to be set before running the flowgrapgh.
+The options required to correct are:
+
+- FFT size
+- Frequency
+- Sample Rate
+- Hostname or IP to connect to, in the ZMQ source block.
+	+ This should be in the format: `tcp://<hostname or ip>:50001`
+
+Specreceive also shows a line representing the threshold, which can be set manually using the slider.
+
 ## Usage suggestions
 Below are some suggestions to use the software. These suggestions are focused on the HAM-radio bands but probably other bands can monitored too. 
 
@@ -283,4 +301,11 @@ This band is 10MHz wide. The sample-rate must be supported by your SDR. A LimeSD
  - Tuner frequency : 435e6
  - Sample rate : 10e6
  - FFT-size : 16384
+ 
+### EU 868MHz ISM band
+This band is wider than the suggested 2.5MHz but it holds the majority of the LoRa frequencies. Using this settings, the IOT usage can be monitored. As the LoRa transmissions are at least 125KHz wide, the FFT-size is sufficient for this monitoring.
+
+- Tuner frequency : 868.35MHz
+- Sample rate : 2.5e6
+- FFT-size : 2048
  
