@@ -32,42 +32,6 @@ options:
     state: enabled
 
 blocks:
-- name: fftsize
-  id: variable
-  parameters:
-    comment: ''
-    value: '4096'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [304, 32.0]
-    rotation: 0
-    state: enabled
-- name: freq
-  id: variable
-  parameters:
-    comment: ''
-    value: 48e6
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [560, 32.0]
-    rotation: 0
-    state: enabled
-- name: samp_rate
-  id: variable
-  parameters:
-    comment: ''
-    value: 2.5e6
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [432, 32.0]
-    rotation: 0
-    state: enabled
 - name: threshold
   id: variable_qtgui_range
   parameters:
@@ -89,6 +53,26 @@ blocks:
     coordinate: [704, 40.0]
     rotation: 0
     state: enabled
+- name: blocks_add_const_vxx_0
+  id: blocks_add_const_vxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: 'Constant is a value for correction to real dBm.
+
+      Only to be used after calibration measurement.'
+    const: ([calconst]*fftsize)
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    type: float
+    vlen: fftsize
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [320, 272.0]
+    rotation: 0
+    state: true
 - name: blocks_vector_source_x_0
   id: blocks_vector_source_x
   parameters:
@@ -100,15 +84,141 @@ blocks:
     repeat: 'True'
     tags: '[]'
     type: float
-    vector: '[threshold]*fftsize'
+    vector: '[threshold+calconst]*fftsize'
     vlen: fftsize
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [712, 400.0]
+    coordinate: [840, 368.0]
     rotation: 180
-    state: enabled
+    state: disabled
+- name: blocks_vector_to_stream_0
+  id: blocks_vector_to_stream
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    num_items: fftsize
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [544, 488.0]
+    rotation: 0
+    state: true
+- name: calconst
+  id: parameter
+  parameters:
+    alias: ''
+    comment: ''
+    hide: none
+    label: calibration-constant
+    short_id: c
+    type: eng_float
+    value: '-132'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [864, 44.0]
+    rotation: 0
+    state: true
+- name: fftsize
+  id: parameter
+  parameters:
+    alias: ''
+    comment: ''
+    hide: none
+    label: fft-size
+    short_id: F
+    type: intx
+    value: '4096'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [280, 36.0]
+    rotation: 0
+    state: true
+- name: freq
+  id: parameter
+  parameters:
+    alias: ''
+    comment: ''
+    hide: none
+    label: Frequency
+    short_id: f
+    type: eng_float
+    value: 48e6
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [552, 36.0]
+    rotation: 0
+    state: true
+- name: qtgui_time_raster_sink_x_0
+  id: qtgui_time_raster_sink_x
+  parameters:
+    affinity: ''
+    alias: ''
+    alpha1: '1.0'
+    alpha10: '1.0'
+    alpha2: '1.0'
+    alpha3: '1.0'
+    alpha4: '1.0'
+    alpha5: '1.0'
+    alpha6: '1.0'
+    alpha7: '1.0'
+    alpha8: '1.0'
+    alpha9: '1.0'
+    axislabels: 'False'
+    color1: '0'
+    color10: '0'
+    color2: '0'
+    color3: '0'
+    color4: '0'
+    color5: '0'
+    color6: '0'
+    color7: '0'
+    color8: '0'
+    color9: '0'
+    comment: ''
+    grid: 'True'
+    gui_hint: tabje@1
+    label1: ''
+    label10: ''
+    label2: ''
+    label3: ''
+    label4: ''
+    label5: ''
+    label6: ''
+    label7: ''
+    label8: ''
+    label9: ''
+    mult: '[]'
+    name: '""'
+    ncols: fftsize
+    nconnections: '1'
+    nrows: '500'
+    offset: '[]'
+    samp_rate: '5'
+    type: float
+    update_time: '0.10'
+    zmax: '-110'
+    zmin: '-130'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [808, 520.0]
+    rotation: 0
+    state: true
 - name: qtgui_vector_sink_f_0
   id: qtgui_vector_sink_f
   parameters:
@@ -139,12 +249,12 @@ blocks:
     comment: 'X-start: freq-(samp_rate/2)
 
       X-step: samp_rate/fftsize'
-    grid: 'True'
-    gui_hint: ''
-    label1: ''
+    grid: 'False'
+    gui_hint: tabje@0
+    label1: Original
     label10: ''
-    label2: ''
-    label3: ''
+    label2: Threshold
+    label3: Sorted
     label4: ''
     label5: ''
     label6: ''
@@ -154,7 +264,7 @@ blocks:
     maxoutbuf: '0'
     minoutbuf: '0'
     name: '""'
-    nconnections: '2'
+    nconnections: '3'
     ref_level: '0'
     showports: 'True'
     update_time: '0.10'
@@ -175,19 +285,134 @@ blocks:
     x_units: '""'
     y_axis_label: '"y-Axis"'
     y_units: '""'
-    ymax: '55'
-    ymin: '-40'
+    ymax: '-110'
+    ymin: '-130'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [712, 184.0]
+    coordinate: [848, 184.0]
     rotation: 0
     state: enabled
+- name: remote
+  id: parameter
+  parameters:
+    alias: ''
+    comment: 'Host to connect to. Format:
+
+      tcp://<hostname>:<portnumber>'
+    hide: none
+    label: remote-host
+    short_id: r
+    type: str
+    value: tcp://sigint:50001
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [64, 164.0]
+    rotation: 0
+    state: true
+- name: samp_rate
+  id: parameter
+  parameters:
+    alias: ''
+    comment: ''
+    hide: none
+    label: Sample-Rate
+    short_id: s
+    type: eng_float
+    value: 2.5e6
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [408, 36.0]
+    rotation: 0
+    state: true
+- name: tabje
+  id: qtgui_tab_widget
+  parameters:
+    alias: ''
+    comment: ''
+    gui_hint: ''
+    label0: Spectrum
+    label1: Waterfall
+    label10: Tab 10
+    label11: Tab 11
+    label12: Tab 12
+    label13: Tab 13
+    label14: Tab 14
+    label15: Tab 15
+    label16: Tab 16
+    label17: Tab 17
+    label18: Tab 18
+    label19: Tab 19
+    label2: Tab 2
+    label3: Tab 3
+    label4: Tab 4
+    label5: Tab 5
+    label6: Tab 6
+    label7: Tab 7
+    label8: Tab 8
+    label9: Tab 9
+    num_tabs: '2'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [224, 504.0]
+    rotation: 0
+    state: true
+- name: vector_sorter
+  id: epy_block
+  parameters:
+    _source_code: "\"\"\"\nEmbedded Python Blocks:\n\nEach time this file is saved,\
+      \ GRC will instantiate the first class it finds\nto get ports and parameters\
+      \ of your block. The arguments to __init__  will\nbe the parameters. All of\
+      \ them are required to have default values!\n\"\"\"\n\nimport numpy as np\n\
+      from gnuradio import gr\n\n\nclass blk(gr.sync_block):  # other base classes\
+      \ are basic_block, decim_block, interp_block\n    \"\"\"Vector Sort And Threshold\
+      \ \n    \n    This block does 2 things:\n    - Sort a vector with numpy. Output\
+      \ this vector on port 0\n    \n    - Calculate the median (50%) and add the\
+      \ threshold. Output a vector on port 1.\n    \n    \"\"\"\n\n    def __init__(self,\
+      \ fftsize=4096, threshold=8.0):  # only default arguments here\n        \"\"\
+      \"arguments to this function show up as parameters in GRC\"\"\"\n        self.threshold\
+      \ = threshold\n        self.fftsize = fftsize\n        gr.sync_block.__init__(\n\
+      \            self,\n            name='Vector Sort And Threshold',   # will show\
+      \ up in GRC\n            in_sig=[(np.float32,fftsize)],\n            out_sig=[(np.float32,fftsize),(np.float32,fftsize)]\n\
+      \        )\n        # if an attribute with the same name as a parameter is found,\n\
+      \        # a callback is registered (properties work, too).\n        #self.example_param\
+      \ = example_param\n\n    def work(self, input_items, output_items):\n      \
+      \  # Sort the list\n        sortlist = np.sort(input_items[0])\n        # Output\
+      \ the sorted list on output 0\n        output_items[0][:] = sortlist\n     \
+      \   # Determine the median\n        vecmedian = np.median(sortlist[:(int(self.fftsize/2))])\n\
+      \        # Output the calculated threshold as vector on output 1\n        output_items[1][:]\
+      \ =  [self.threshold + vecmedian]*self.fftsize\n        return len(output_items[0])\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    fftsize: fftsize
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    threshold: threshold
+  states:
+    _io_cache: ('Vector Sort And Threshold', 'blk', [('fftsize', '4096'), ('threshold',
+      '8.0')], [('0', 'float', 4096)], [('0', 'float', 4096), ('1', 'float', 4096)],
+      'Vector Sort And Threshold \n    \n    This block does 2 things:\n    - Sort
+      a vector with numpy. Output this vector on port 0\n    \n    - Calculate the
+      median (50%) and add the threshold. Output a vector on port 1.\n    \n    ',
+      ['fftsize', 'threshold'])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [600, 344.0]
+    rotation: 0
+    state: true
 - name: zeromq_sub_source_0
   id: zeromq_sub_source
   parameters:
-    address: tcp://remotehost.lan:50001
+    address: remote
     affinity: ''
     alias: ''
     comment: ''
@@ -202,13 +427,19 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [216, 320.0]
+    coordinate: [56, 332.0]
     rotation: 0
     state: true
 
 connections:
+- [blocks_add_const_vxx_0, '0', blocks_vector_to_stream_0, '0']
+- [blocks_add_const_vxx_0, '0', qtgui_vector_sink_f_0, '0']
+- [blocks_add_const_vxx_0, '0', vector_sorter, '0']
 - [blocks_vector_source_x_0, '0', qtgui_vector_sink_f_0, '1']
-- [zeromq_sub_source_0, '0', qtgui_vector_sink_f_0, '0']
+- [blocks_vector_to_stream_0, '0', qtgui_time_raster_sink_x_0, '0']
+- [vector_sorter, '0', qtgui_vector_sink_f_0, '2']
+- [vector_sorter, '1', qtgui_vector_sink_f_0, '1']
+- [zeromq_sub_source_0, '0', blocks_add_const_vxx_0, '0']
 
 metadata:
   file_format: 1

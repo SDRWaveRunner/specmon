@@ -1,0 +1,47 @@
+#!/bin/bash
+#
+# 220703 Test boxplot per day
+#
+#
+
+OUTDIR="tst"
+
+if [ ! -d ${OUTDIR} ]; then
+        mkdir ${OUTDIR}
+fi
+
+if [ -z $1 ] ; then
+	YESTERDAY=$(date --date=yesterday +%y%m%d)
+else
+	YESTERDAY=$1
+	echo "Processing day ${YESTERDAY}"
+fi
+
+
+# Step 1: Create single value files
+for i in noisemon-${YESTERDAY}-{00..23}00.csv;
+do
+	cat $i | cut -d "," -f 3 > ${OUTDIR}/$i
+done
+
+# Step 2: concatenate the files to a single csv
+paste -d "," ${OUTDIR}/noisemon-${YESTERDAY}*csv > ${OUTDIR}/${YESTERDAY}.csv
+
+# Step 3: create the boxplot
+
+gnuplot <<- EOF
+set terminal png size 1280,768
+set output '${OUTDIR}/${YESTERDAY}.png'
+set datafile separator ","
+set style boxplot nooutliers
+set style data boxplot
+#set boxwidth 0.3
+set yrange [-4:0]
+plot for [i=1:24] '${OUTDIR}/${YESTERDAY}.csv' using (i):i notitle
+
+
+EOF
+
+rm ${OUTDIR}/noisemon-${YESTERDAY}*csv
+
+exit 0

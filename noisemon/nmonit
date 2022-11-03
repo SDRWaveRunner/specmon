@@ -1,0 +1,66 @@
+#!/bin/bash
+#
+# Description: 
+# Wrapper for specmon2 to run from cron
+# Auto clean old recordings from /tmp
+#
+# Author: Bart Somers PE1RIK
+# 
+# ./noisemon.py -f 48e6 -s 2.5e6 -g 12 -F 4096 -c calvec-4096-0.vec -R 120 -d airspy=0 -O /tmp/logfile-dummy-4096-g12.csv
+
+# Put to 1 to make this run
+ENABLED=1
+
+# Put to 1 to automatic clean old recordings in /tmp
+# Files older than 2 days are removed
+AUTOCLEAN=1
+
+GAIN=40
+FREQ=145e6
+RUNTIME=3580
+DEVICE="airspy=0"
+SAMPRATE=2e6
+#CALVEC=/home/user/noisemon/220911-143M-G40-S2e6-4096-0.calvec
+CALVEC=/home/user/noisemon/221014-145M-G40-S2e6-4096-0.calvec
+FFTSIZE=4096
+SCNLIMIT=3
+
+# Use the correct tool to run
+NOISEMON=/home/user/noisemon/noisemon.py
+
+# Define the logdir
+LOGDIR=/home/user/log/145
+
+# Start monitoring if enabled.
+if [ ${ENABLED} == 1 ]; 
+then
+        if [ ! -d ${LOGDIR} ];
+        then
+                mkdir -p ${LOGDIR} ;
+        fi
+
+        TIMESTAMP=`date +%y%m%d-%H%M`
+        echo -e "\nLog started at:  ${TIMESTAMP}\n" >> ${LOGDIR}/noisemon.debug
+
+	# Run noisemon with the selected parameters
+	${NOISEMON} -f ${FREQ} -s ${SAMPRATE} -F ${FFTSIZE} -g ${GAIN} -c ${CALVEC} -R ${RUNTIME} -d ${DEVICE} -S ${SCNLIMIT} -O ${LOGDIR}/noisemon-${TIMESTAMP}.csv >> ${LOGDIR}/noisemon.debug 2>&1
+
+        # The next lines are for temperature and runtime debugging, mainly on a Raspberry Pi
+        # TEMPLOG=/tmp/specmon2-`date +%y%m%d`.templog
+        # date >> $TEMPLOG
+        # Next line only for Raspberry Pi
+        # /opt/vc/bin/vcgencmd measure_temp >> $TEMPLOG
+        
+fi
+
+# Check to see if autocleaning is enabled.
+# Defaults to 2 days old logfiles.
+if [ $AUTOCLEAN == 1 ];
+then
+	# 2 days
+	#find /tmp/ -maxdepth 1 -name "*pvector" -mmin +$((2*1440)) -delete
+	# 1 day
+	find /tmp/ -maxdepth 1 -name "*pvector" -mmin +1440 -delete
+fi
+
+exit 0

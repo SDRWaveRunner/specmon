@@ -13,7 +13,7 @@ As most SDR's lack good frontend-filtering, bandfiltering is required to maintai
 Specmon is build upon GNURadio, Python and Gnuplot.
 For Debian-based systems the dependencies can be installed with:
 
-`apt install gnuradio gnuplot gr-osmosdr python-numpy python3-numpy`
+`apt install gnuradio gr-osmosdr python-pil rtl-sdr python3-scipy python3-numpy python3-matplotlib csvkit paste gnuplot`
 
 For support for other SDR's, install the required modules. For example for PlutoSDR: 
 
@@ -69,7 +69,7 @@ This generates a calibration-vector:
 This calibration-vector is used for the monitoring process
 
 ### Determine the threshold
-The threshold is the powerlevel value which a transmission should reach before it is considered as a transmission. According to the ITU it should be 20dB above the noise level however this is a high limit for relatie low power transmissions or weak transmissions, caused by a higher free-space path loss. These latter transmissions are not recorded as transmissions with a high threshold. Using a low threshold on the other hand will cause false positives due to short term impulses, caused by RFI or noisefloor variances.
+The threshold is the powerlevel value which a transmission should reach before it is considered as a transmission. According to the ITU it should be 20dB above the noise level however this is a high limit for relative low power transmissions or weak transmissions, caused by a higher free-space path loss. These latter transmissions are not recorded as transmissions with a high threshold. Using a low threshold on the other hand will cause false positives due to short term impulses, caused by RFI or noisefloor variances.
 The threshold can be controlled either afterwards using a replay from previous monitoring or by inspecting the measurements using specmon_gui.
 
 #### Auto Threshold calculation
@@ -137,6 +137,16 @@ Specmon2_gui can be used to inspect the spectrum and select the right constant f
 During the monitoring process, it is possible to connect to the ZMQ port for live view of the data, that are the vectors to be processed by specmon, remotely.
 For this a tool is added, specreceive, which can connect to the ZMQ port 50001, on the system, running specmon.
 As this only sends the integrated vectors, the amount is data is fairly low and can be send over a VPN or remote connection.
+
+### Specreceive display
+Specreceive has two main displays:
+The first display, in the tab Spectrum, the current spectrum view is displayed.
+In addition to the spectrum, two more lines are drwan:
+
+1. The green line is the "sorted spectrum", that is sorting the vector from low to high.
+2. Based on the median of the lower half of the sorted spectrum (green line) the threshold is calculated.
+
+The second display is a waterfall display of the spectrum.
 
 ## Replay of recorded data
 The unprocessed vectors from the measurements are stored in /tmp. The vectors are not corrected yet with the calibration vector and thus named "unprocessed". These files can be graphical replayed, together with the calibration-vector to review the state while recorded. This can show RFI or other unknown transmissions, or can be used to modify the threshold value.
@@ -276,6 +286,24 @@ The options required to correct are:
 	+ This should be in the format: `tcp://<hostname or ip>:50001`
 
 Specreceive also shows a line representing the threshold, which can be set manually using the slider.
+
+#### Options
+
+````
+usage: specreceive.py [-h] [-c CALCONST] [-F FFTSIZE] [-f FREQ] [-r REMOTE] [-s SAMP_RATE]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -c CALCONST, --calconst CALCONST
+                        Set calibration-constant [default='-132.0']
+  -F FFTSIZE, --fftsize FFTSIZE
+                        Set fft-size [default=4096]
+  -f FREQ, --freq FREQ  Set Frequency [default='48.0M']
+  -r REMOTE, --remote REMOTE
+                        Set remote-host [default='tcp://remote:50001']
+  -s SAMP_RATE, --samp-rate SAMP_RATE
+                        Set Sample-Rate [default='2.5M']
+````
 
 ## Usage suggestions
 Below are some suggestions to use the software. These suggestions are focused on the HAM-radio bands but probably other bands can monitored too. 

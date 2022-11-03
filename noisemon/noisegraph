@@ -1,0 +1,77 @@
+#!/bin/bash
+#
+# Description: Wrapper to create daily graphs from parsed logfile
+#
+# Author: Bart Somers PE1RIK
+#
+
+if [ -z $1 ];
+then
+	echo "Usage: $0 <inputfile to plot>"
+      	exit 1
+else
+
+	BESTAND=${1}
+fi
+
+
+#OUTBESTAND=${BESTAND}-test
+OUTBESTAND=${BESTAND}
+
+gnuplot <<- EOF
+set datafile separator ","
+set terminal pngcairo size 1024,768
+set output '${OUTBESTAND}-noise.png'
+set xlabel "Minutes"
+set ylabel "Noise (relative dB)
+set xrange [0:60]
+plot "${BESTAND}" using (\$4/300):3 skip 3 notitle
+
+set datafile separator ","
+set terminal pngcairo size 1024,768
+set output '${OUTBESTAND}-std.png'
+set xlabel "Minutes"
+set ylabel "STDev noise"
+set xrange [0:60]
+plot "${BESTAND}" using (\$4/300):8 skip 3 notitle
+
+set datafile separator ","
+set terminal pngcairo size 1024,768
+set output '${OUTBESTAND}-diff.png'
+set xlabel "Minutes"
+set ylabel "Diff Median and Mean"
+set xrange [0:60]
+plot "${BESTAND}" using (\$4/300):(\$3-\$7) skip 3 notitle
+
+set datafile separator ","
+set terminal pngcairo size 1024,768
+set output '${OUTBESTAND}-skew.png'
+set xlabel "Minutes"
+set ylabel "Skewness"
+set xrange [0:60]
+plot "${BESTAND}" using (\$4/300):9 skip 3 notitle
+
+set datafile separator ","
+set terminal pngcairo size 1024,768
+set output '${OUTBESTAND}-use-scn.png'
+set xlabel "Minutes"
+set ylabel "Usage and SCN count"
+set xrange [0:60]
+plot "${BESTAND}" using (\$4/300):5 skip 3 title "SCN count", "${BESTAND}" using (\$4/300):6 skip 3 title "Normal Usage count"
+
+set datafile separator ","
+set terminal pngcairo size 2048,768
+set output '${OUTBESTAND}-combined.png'
+set xlabel "Minutes"
+set ylabel "combined values"
+set xrange [0:60]
+plot "${BESTAND}" using (\$4/300):3 skip 3 title "Noise", \
+"${BESTAND}" using (\$4/300):8 skip 3 title "STDev", \
+"${BESTAND}" using (\$4/300):(\$3-\$7) skip 3 title "Diff Mean Median", \
+"${BESTAND}" using (\$4/300):9 skip 3 title "Skewness", \
+#"${BESTAND}" using (\$4/300):5 skip 3 title "SCN count", \
+#"${BESTAND}" using (\$4/300):6 skip 3 title "Normal Usage count"
+
+EOF
+
+exit 0
