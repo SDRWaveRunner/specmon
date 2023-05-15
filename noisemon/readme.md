@@ -75,7 +75,7 @@ Postprocessing on the logfiles can be executed manual or via cron.
 Manual creation of the graphs can be done using:
 
 ````
-for i in `ls noisemon-YYMMDD-{00..23}00.csv`; do ./noisegraph ; done
+for i in noisemon-YYMMDD-{00..23}00.csv; do ./noisegraph ; done
 ````
 
 This creates multiple graphs from the measurements:
@@ -102,9 +102,9 @@ Data in this files are stored as csv, comma separated values. The format of the 
 
 ````
 Start,1667473204.96,Hour,12,Veclen,4096,Threshold,8.00,SCNLimit,3
-N,time,lowlimit,veccount,scncount,nusage,vecmean,vecstd,vecskew,rms
-N,1667473207.47,8.56,1,8,4,8.48,0.44,-1.51,8.49
-N,1667473207.64,8.66,2,8,4,8.58,0.40,-1.10,8.59
+N,time,lowlimit,veccount,scncount,nusage,vecmean,vecstd,vecskew,rms,inoise,diff
+N,1667473207.47,8.56,1,8,4,8.48,0.44,-1.51,8.49,0,0.12
+N,1667473207.64,8.66,2,8,4,8.58,0.40,-1.10,8.59,0,0.12
 ````
 
 The first line is the Start line. This writes:
@@ -127,4 +127,6 @@ The second line is the dataformat of the measured values. All values are calcula
 8. vecstd: Standard Deviation in the noisevector.
 9. vecskew: Skewness of the noisevector.
 10. rms: RMS value of the noisevector.
+11. inoise: Value for the (experimental) detection of Impulse Noise. 1 for INoise
+12. diff: Absolute difference between the median(lowlimit) and mean(vecmean)
 

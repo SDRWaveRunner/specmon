@@ -437,27 +437,42 @@ blocks:
       \        print (\"Start,%.2f,Hour,%s,Veclen,%i,Threshold,%.2f,SCNLimit,%i\"\
       \ % ( time.time(), str(time.strftime(\"%H\")), self.fftsize, self.threshold,\
       \ self.SCNLimit), file=self.outfile, flush=True )\n        \n        # Print\
-      \ header\n        print (\"N,time,lowlimit,veccount,scncount,nusage,vecmean,vecstd,vecskew,rms\"\
-      , file=self.outfile, flush=True)\n        self.veccount = 0\n        \n    def\
-      \ work(self, input_items, output_items):\n        \n        for j in range(len(input_items[0])):\n\
+      \ header\n        print (\"N,time,lowlimit,veccount,scncount,nusage,vecmean,vecstd,vecskew,rms,inoise,diff\"\
+      , file=self.outfile, flush=True)\n        # Counter for the number of vectors\n\
+      \        self.veccount = 0\n        # Buffer for the old STDev\n        # Start\
+      \ with high value to prevent first vector as false positive\n        # 230514\
+      \ try an array\n        self.oldstdev = []\n        \n        \n    def work(self,\
+      \ input_items, output_items):\n        \n        for j in range(len(input_items[0])):\n\
       \                if len(input_items[0][j]) == self.fftsize:\n              \
       \          # Correct length\n                        \n                    \
       \    # print (\"New Vector\")\n                        \n                  \
       \      speclist = np.array(input_items[0][j])\n                        \n  \
       \                      # 220917 trunk the list to the usable value for the Airspy\
       \ in 2.5MSps\n                        # use 0.6, so extract 0.2 on both sides.\n\
-      \                        # See notes on 220917\n                        #trunklist\
-      \ = speclist[(int(self.fftsize*0.2)):(int(self.fftsize-(self.fftsize*0.2)))]\n\
+      \                        # See notes on 220917\n                        # Use\
+      \ 0.5, so extract 0.25 on both sides.\n                        # See notes on\
+      \ 230514\n                        #trunklist = speclist[(int(self.fftsize*0.25)):(int(self.fftsize-(self.fftsize*0.25)))]\n\
       \                        #olist = np.sort(trunklist)\n                     \
       \   \n                        olist = np.sort(speclist)\n                  \
       \      \n                        # Create a short vector in one place and use\
-      \ everywhere\n                        shortvec = olist[:(int(self.fftsize/2))]\n\
+      \ everywhere\n                        # Use the first 50% for now. ITU-R SM.1753-2\
+      \ suggest other.\n                        # Delete the first 10 values, as these\
+      \ usually hold the DC-spike.\n                        shortvec = olist[10:(int(len(olist)/2))]\n\
       \                        \n                        lowlimit = np.median(shortvec)\n\
       \                        \n                        # Stats on the short vector\n\
       \                        vecmean = np.mean(shortvec)\n                     \
-      \   vecstd = np.std(shortvec)\n\n                        # Calculate skewness\n\
-      \                        vecskew = skew(shortvec)\n                        \n\
-      \                        # Calculate RMS\n                        b = np.square(shortvec)\n\
+      \   vecstd = np.std(shortvec)\n                        \n                  \
+      \      # Try to detect Impulse Noise\n                        inoise = 0\n \
+      \                       self.oldstdev.append(vecstd)\n                     \
+      \   stdevavg = sum(self.oldstdev)/len(self.oldstdev)\n                     \
+      \   #if vecstd > (1.25 * self.oldstdev):\n                        if vecstd\
+      \ > (1.25 * stdevavg):\n                                inoise = 1\n       \
+      \                 \n                        # Update oldstdev\n            \
+      \            #self.oldstdev = vecstd\n                        if len(self.oldstdev)\
+      \ > 25:\n                                del self.oldstdev[0:1]\n          \
+      \              \n                        # Calculate skewness\n            \
+      \            vecskew = skew(shortvec)\n                        \n          \
+      \              # Calculate RMS\n                        b = np.square(shortvec)\n\
       \                        vecrms = np.sqrt((np.sum(b)/len(b)))\n\n          \
       \              # Now detect SNC (and normal usage)\n                       \
       \ \n                        # Create output-vector of lowlimit + threshold\n\
@@ -502,11 +517,12 @@ blocks:
       \              self.veccount+=1\n                        #print (\"N,%.2f,%.2f,%i\"\
       \ % (time.time(), lowlimit, self.veccount), end=\"\\n\", file=self.outfile,\
       \ flush=True )\n                        # N,time,lowlimit,scncount, nusage,vecmean,vecstd,veccount\n\
-      \                        print (\"N,%.2f,%.2f,%i,%i,%i,%.2f,%.2f,%.2f,%.2f\"\
+      \                        print (\"N,%.2f,%.2f,%i,%i,%i,%.2f,%.2f,%.2f,%.2f,%i,%.2f\"\
       \ % (time.time(), lowlimit, self.veccount, scncount, nusage, vecmean, vecstd,\
-      \ vecskew, vecrms), end=\"\\n\", file=self.outfile, flush=True )\n         \
-      \       else:\n                        print (\"Other length input: \" + str(len(input_items[0][j])))\n\
-      \        \n        return len(input_items[0])\n"
+      \ vecskew, vecrms, inoise, abs(lowlimit-vecmean)), end=\"\\n\", file=self.outfile,\
+      \ flush=True )\n                else:\n                        print (\"Other\
+      \ length input: \" + str(len(input_items[0][j])))\n        \n        return\
+      \ len(input_items[0])\n"
     affinity: ''
     alias: ''
     comment: 'Overal moeten de standaardwaarden gelijk zijn,
@@ -676,7 +692,7 @@ blocks:
     corr7: '0'
     corr8: '0'
     corr9: '0'
-    dc_offset_mode0: '0'
+    dc_offset_mode0: '2'
     dc_offset_mode1: '0'
     dc_offset_mode10: '0'
     dc_offset_mode11: '0'
@@ -887,9 +903,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [16, 212.0]
+    coordinate: [16, 236.0]
     rotation: 0
-    state: true
+    state: enabled
 - name: outfile
   id: parameter
   parameters:
